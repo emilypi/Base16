@@ -26,7 +26,7 @@ import qualified Data.Text.Encoding as T
 
 -- | Encode a 'Text' value in Base16 with padding.
 --
--- See: <https://tools.ietf.org/html/rfc8688#section-8 RFC-8688 section 8>
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 encodeBase16 :: Text -> Text
 encodeBase16 = B16.encodeBase16 . T.encodeUtf8
@@ -34,7 +34,7 @@ encodeBase16 = B16.encodeBase16 . T.encodeUtf8
 
 -- | Decode a padded Base16-encoded 'Text' value
 --
--- See: <https://tools.ietf.org/html/rfc8688#section-8 RFC-8688 section 8>
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 decodeBase16 :: Text -> Either Text Text
 decodeBase16 = fmap T.decodeUtf8 . B16.decodeBase16 . T.encodeUtf8
