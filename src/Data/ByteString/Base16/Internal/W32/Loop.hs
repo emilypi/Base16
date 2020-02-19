@@ -118,7 +118,8 @@ decodeLoop !dfp !hi !lo !dptr !sptr !end = go dptr sptr 0
           ++ show (src `minusPtr` sptr)
         else do
           poke @Word8 dst (a .|. b)
-          go (plusPtr dst 1) (plusPtr src 2) (n + 1)
+          return (Right (PS dfp 0 (n + 1)))
+
 
     go !dst !src !n
       | plusPtr src 3 >= end = tailRound16 (castPtr dst) (castPtr src) n
@@ -148,3 +149,4 @@ decodeLoop !dfp !hi !lo !dptr !sptr !end = go dptr sptr 0
           | otherwise -> do
             poke @Word16 dst zz
             go (plusPtr dst 2) (plusPtr src 4) (n + 2)
+{-# INLINE decodeLoop #-}

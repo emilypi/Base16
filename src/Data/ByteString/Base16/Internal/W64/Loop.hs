@@ -160,7 +160,7 @@ decodeLoop !dfp !hi !lo !dptr !sptr !end = go dptr sptr 0
           | b == 0xff -> err (plusPtr src 1)
           | otherwise -> do
             poke dst (a .|. b)
-            go (plusPtr dst 1) (plusPtr src 2) (n + 1)
+            return (Right (PS dfp 0 (n + 1)))
 
     tailRound32 !dst !src !n
       | plusPtr src 3 >= end = tailRound16 (castPtr dst) (castPtr src) n
@@ -190,7 +190,7 @@ decodeLoop !dfp !hi !lo !dptr !sptr !end = go dptr sptr 0
           | d == 0xff -> err (plusPtr src 3)
           | otherwise -> do
             poke @Word16 dst zz
-            go (plusPtr dst 2) (plusPtr src 4) (n + 2)
+            tailRound16 (plusPtr dst 2) (plusPtr src 4) (n + 2)
 
     go !dst !src !n
       | plusPtr src 7 >= end = tailRound32 (castPtr dst) (castPtr src) n
@@ -235,3 +235,4 @@ decodeLoop !dfp !hi !lo !dptr !sptr !end = go dptr sptr 0
           | otherwise -> do
             poke @Word32 dst zz
             go (plusPtr dst 4) (plusPtr src 8) (n + 4)
+{-# INLINE decodeLoop #-}
