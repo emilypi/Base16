@@ -29,6 +29,7 @@ import Data.ByteString.Lazy (all, elem, fromStrict)
 import Data.ByteString.Lazy.Internal (ByteString(..))
 import qualified Data.ByteString.Base16.Internal.Head as B16
 import Data.Either
+import Data.Semigroup ((<>))
 import qualified Data.Text as T
 import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as TL
