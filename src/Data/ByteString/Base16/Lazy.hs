@@ -35,7 +35,7 @@ import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as TL
 
 
--- | Encode a 'ByteString' value as Base16 'Text' with padding.
+-- | Encode a lazy 'ByteString' value as Base16 'Text' with padding.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -43,7 +43,7 @@ encodeBase16 :: ByteString -> Text
 encodeBase16 = TL.decodeUtf8 . encodeBase16'
 {-# INLINE encodeBase16 #-}
 
--- | Encode a 'ByteString' value as a Base16 'ByteString'  value with padding.
+-- | Encode a lazy 'ByteString' value as a Base16 'ByteString'  value with padding.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -52,7 +52,7 @@ encodeBase16' (Chunk b bs) = Chunk (B16.encodeBase16_ b) (encodeBase16' bs)
 encodeBase16' _ = Empty
 {-# INLINE encodeBase16' #-}
 
--- | Decode a padded Base16-encoded 'ByteString' value.
+-- | Decode a padded Base16-encoded lazy 'ByteString' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -61,7 +61,7 @@ decodeBase16 Empty = Right Empty
 decodeBase16 (Chunk b bs) = (fromStrict <$> B16.decodeBase16_ b) <> decodeBase16 bs
 {-# INLINE decodeBase16 #-}
 
--- | Tell whether a 'ByteString' value is base16 encoded.
+-- | Tell whether a lazy 'ByteString' value is base16 encoded.
 --
 -- Examples:
 --
@@ -81,7 +81,7 @@ isBase16 :: ByteString -> Bool
 isBase16 bs = isValidBase16 bs && isRight (decodeBase16 bs)
 {-# INLINE isBase16 #-}
 
--- | Tell whether a 'ByteString' value is a valid Base16 format.
+-- | Tell whether a lazy 'ByteString' value is a valid Base16 format.
 --
 -- This will not tell you whether or not this is a correct Base16 representation,
 -- only that it conforms to the correct alphabet. To check whether it is a true
