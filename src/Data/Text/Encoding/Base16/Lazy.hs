@@ -1,5 +1,5 @@
 -- |
--- Module       : Data.Text.Encoding.Base16
+-- Module       : Data.Text.Encoding.Base16.Lazy
 -- Copyright 	: (c) 2019 Emily Pillmore
 -- License	: BSD-style
 --
@@ -9,7 +9,7 @@
 --
 -- This module contains the combinators implementing the
 -- RFC 4648 specification for the Base16 encoding including
--- unpadded and lenient variants
+-- unpadded and lenient variants for lazy textual values
 --
 module Data.Text.Encoding.Base16.Lazy
 ( encodeBase16

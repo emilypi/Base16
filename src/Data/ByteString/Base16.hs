@@ -12,7 +12,7 @@
 --
 -- This module contains the combinators implementing the
 -- RFC 4648 specification for the Base16 encoding including
--- unpadded and lenient variants
+-- unpadded and lenient variants for bytestrings
 --
 module Data.ByteString.Base16
 ( encodeBase16

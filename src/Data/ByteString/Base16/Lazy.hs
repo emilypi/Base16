@@ -2,7 +2,7 @@
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- |
--- Module       : Data.ByteString.Base16
+-- Module       : Data.ByteString.Base16.Lazy
 -- Copyright 	: (c) 2020 Emily Pillmore
 -- License	: BSD-style
 --
@@ -12,7 +12,7 @@
 --
 -- This module contains the combinators implementing the
 -- RFC 4648 specification for the Base16 encoding including
--- unpadded and lenient variants
+-- unpadded and lenient variants for lazy bytestrings
 --
 module Data.ByteString.Base16.Lazy
 ( encodeBase16
