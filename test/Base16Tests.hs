@@ -9,7 +9,9 @@ module Main
 
 import Data.Bifunctor
 import Data.ByteString (ByteString)
+import Data.ByteString.Lazy (fromStrict)
 import "base16" Data.ByteString.Base16 as B16
+import "base16" Data.ByteString.Base16.Lazy as B16L
 import "memory" Data.ByteArray.Encoding as Mem
 import Data.ByteString.Random (random)
 import Data.Functor (void)
@@ -32,7 +34,7 @@ tests = testGroup "Base16 Tests"
 
 testVectors :: TestTree
 testVectors = testGroup "RFC 4648 Test Vectors"
-    [ testGroup "encode/decode"
+    [ testGroup "strict encode/decode"
       [ testCaseB16 "" ""
       , testCaseB16 "f" "66"
       , testCaseB16 "fo" "666f"
@@ -40,6 +42,15 @@ testVectors = testGroup "RFC 4648 Test Vectors"
       , testCaseB16 "foob" "666f6f62"
       , testCaseB16 "fooba" "666f6f6261"
       , testCaseB16 "foobar" "666f6f626172"
+      ]
+    , testGroup "lazy encode/decode"
+      [ testCaseB16L "" ""
+      , testCaseB16L "f" "66"
+      , testCaseB16L "fo" "666f"
+      , testCaseB16L "foo" "666f6f"
+      , testCaseB16L "foob" "666f6f62"
+      , testCaseB16L "fooba" "666f6f6261"
+      , testCaseB16L "foobar" "666f6f626172"
       ]
     ]
   where
@@ -54,53 +65,115 @@ testVectors = testGroup "RFC 4648 Test Vectors"
         step "compare decoding"
         Right s @=? s'
 
+    testCaseB16L s t =
+      testCaseSteps (show $ if s == "" then "empty" else s) $ \step -> do
+        let t' = B16L.encodeBase16' s
+            s' = B16L.decodeBase16 t'
+
+        step "compare encoding"
+        t @=? t'
+
+        step "compare decoding"
+        Right s @=? s'
+
 sanityTests :: TestTree
 sanityTests = testGroup "Sanity tests"
-    [ testGroup "very large bytestrings don't segfault"
+    [ testGroup "strict"
+      [ testGroup "very large bytestrings don't segfault"
         [ chonk
         ]
-    , testGroup "`memory` sanity checks"
-        [ compare32 3
-        , compare32 4
-        , compare32 5
-        , compare32 6
-        , compare32 1000
-        , compare32 100000
+      , testGroup "`memory` sanity checks"
+        [ compare 3
+        , compare 4
+        , compare 5
+        , compare 6
+        , compare 1000
+        , compare 100000
         ]
-    , testGroup "roundtrip encode/decode"
+      , testGroup "roundtrip encode/decode"
         [ roundtrip 3
         , roundtrip 4
         , roundtrip 5
         , roundtrip 1000
         , roundtrip 100000
         ]
+      ]
+    , testGroup "lazy"
+      [ testGroup "very large bytestrings don't segfault"
+        [ chonkL
+        ]
+      , testGroup "`memory` sanity checks"
+        [ compareL 3
+        , compareL 4
+        , compareL 5
+        , compareL 6
+        , compareL 1000
+        , compareL 100000
+        ]
+      , testGroup "roundtrip encode/decode"
+        [ roundtripL 3
+        , roundtripL 4
+        , roundtripL 5
+        , roundtripL 1000
+        , roundtripL 100000
+        ]
+      ]
     ]
   where
     chonk = testCase ("Encoding huge bytestrings doesn't result in OOM or segfault") $ do
       bs <- random 1000000
       void $ return $ B16.encodeBase16' bs
 
-    compare32 n = testCase ("Testing " ++ show n ++ "-sized bytestrings") $ do
+    chonkL = testCase ("Encoding huge bytestrings doesn't result in OOM or segfault") $ do
+      bs <- fromStrict <$> random 1000000
+      void $ return $ B16L.encodeBase16' bs
+
+    compare n = testCase ("Testing " ++ show n ++ "-sized bytestrings") $ do
       bs <- random n
       B16.encodeBase16' bs @=? Mem.convertToBase Mem.Base16 bs
 
       B16.decodeBase16 (B16.encodeBase16' bs) @=?
         first pack (Mem.convertFromBase @ByteString Mem.Base16 (Mem.convertToBase Mem.Base16 bs))
 
+    compareL n = testCase ("Testing " ++ show n ++ "-sized bytestrings") $ do
+      bs <- random n
+      B16L.encodeBase16' (fromStrict bs) @=? fromStrict (Mem.convertToBase Mem.Base16 bs)
+
+      B16L.decodeBase16 (B16L.encodeBase16' (fromStrict bs)) @=?
+        bimap pack fromStrict (Mem.convertFromBase @ByteString Mem.Base16 (Mem.convertToBase Mem.Base16 bs))
+
     roundtrip n = testCase ("Roundtrip encode/decode for " ++ show n ++ "-sized bytestrings") $ do
       bs <- random n
       B16.decodeBase16 (B16.encodeBase16' bs) @=? Right bs
 
+    roundtripL n = testCase ("Roundtrip encode/decode for " ++ show n ++ "-sized bytestrings") $ do
+      bs <- fromStrict <$> random n
+      B16L.decodeBase16 (B16L.encodeBase16' bs) @=? Right bs
+
 alphabetTests :: TestTree
 alphabetTests = testGroup "Alphabet tests"
-    [ base16Tests 0
-    , base16Tests 4
-    , base16Tests 5
-    , base16Tests 6
+    [ testGroup "Strict"
+      [ conforms 0
+      , conforms 4
+      , conforms 5
+      , conforms 6
+      ]
+    , testGroup "Lazy"
+      [ conformsL 0
+      , conformsL 4
+      , conformsL 5
+      , conformsL 6
+      ]
     ]
   where
-    base16Tests n = testCase ("Conforms to Base16 alphabet: " ++ show n) $ do
+    conforms n = testCase ("Conforms to Base16 alphabet: " ++ show n) $ do
       bs <- random n
       let b = B16.encodeBase16' bs
       assertBool ("failed validity: " ++ show b) $ B16.isValidBase16 b
       assertBool ("failed correctness: " ++ show b) $ B16.isBase16 b
+
+    conformsL n = testCase ("Conforms to Base16 alphabet: " ++ show n) $ do
+      bs <- fromStrict <$> random n
+      let b = B16L.encodeBase16' bs
+      assertBool ("failed validity: " ++ show b) $ B16L.isValidBase16 b
+      assertBool ("failed correctness: " ++ show b) $ B16L.isBase16 b

@@ -1,9 +1,6 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE MagicHash #-}
-{-# LANGUAGE OverloadedStrings #-}
 -- |
--- Module       : Data.ByteString.Base16
--- Copyright 	: (c) 2020 Emily Pillmore
+-- Module       : Data.Text.Encoding.Base16
+-- Copyright 	: (c) 2019 Emily Pillmore
 -- License	: BSD-style
 --
 -- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
@@ -14,49 +11,37 @@
 -- RFC 4648 specification for the Base16 encoding including
 -- unpadded and lenient variants
 --
-module Data.ByteString.Base16
+module Data.Text.Encoding.Base16.Lazy
 ( encodeBase16
-, encodeBase16'
 , decodeBase16
 , isBase16
 , isValidBase16
 ) where
 
 
-import Prelude hiding (all, elem)
+import qualified Data.ByteString.Base16.Lazy as B16L
 
-import Data.ByteString (ByteString, all, elem)
-import Data.ByteString.Base16.Internal.Head
-import Data.Either
-import Data.Text (Text)
-import qualified Data.Text.Encoding as T
+import qualified Data.Text as T
+import Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy.Encoding as TL
 
-
--- | Encode a 'ByteString' value as Base16 'Text' with padding.
+-- | Encode a 'Text' value in Base16 with padding.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
-encodeBase16 :: ByteString -> Text
-encodeBase16 = T.decodeUtf8 . encodeBase16'
+encodeBase16 :: Text -> Text
+encodeBase16 = B16L.encodeBase16 . TL.encodeUtf8
 {-# INLINE encodeBase16 #-}
 
--- | Encode a 'ByteString' value as a Base16 'ByteString'  value with padding.
+-- | Decode a padded Base16-encoded 'Text' value
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
-encodeBase16' :: ByteString -> ByteString
-encodeBase16' = encodeBase16_
-{-# INLINE encodeBase16' #-}
-
--- | Decode a padded Base16-encoded 'ByteString' value.
---
--- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
---
-decodeBase16 :: ByteString -> Either Text ByteString
-decodeBase16 = decodeBase16_
+decodeBase16 :: Text -> Either T.Text Text
+decodeBase16 = fmap TL.decodeUtf8 . B16L.decodeBase16 . TL.encodeUtf8
 {-# INLINE decodeBase16 #-}
 
--- | Tell whether a 'ByteString' value is base16 encoded.
+-- | Tell whether a 'Text' value is Base16-encoded.
 --
 -- Examples:
 --
@@ -72,15 +57,15 @@ decodeBase16 = decodeBase16_
 -- >>> isBase16 "666f"
 -- True
 --
-isBase16 :: ByteString -> Bool
-isBase16 bs = isValidBase16 bs && isRight (decodeBase16 bs)
+isBase16 :: Text -> Bool
+isBase16 = B16L.isBase16 . TL.encodeUtf8
 {-# INLINE isBase16 #-}
 
--- | Tell whether a 'ByteString' value is a valid Base16 format.
+-- | Tell whether a 'Text' value is a valid Base16 format.
 --
 -- This will not tell you whether or not this is a correct Base16 representation,
--- only that it conforms to the correct alphabet. To check whether it is a true
--- Base16 encoded 'ByteString' value, use 'isBase16'.
+-- only that it conforms to the correct shape. To check whether it is a true
+-- Base16 encoded 'Text' value, use 'isBase16'.
 --
 -- Examples:
 --
@@ -97,6 +82,6 @@ isBase16 bs = isValidBase16 bs && isRight (decodeBase16 bs)
 -- >>> isValidBase16 "666f6"
 -- True
 --
-isValidBase16 :: ByteString -> Bool
-isValidBase16 = all (flip elem "0123456789abcdef")
+isValidBase16 :: Text -> Bool
+isValidBase16 = B16L.isValidBase16 . TL.encodeUtf8
 {-# INLINE isValidBase16 #-}
