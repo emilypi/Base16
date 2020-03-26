@@ -13,7 +13,7 @@
 -- RFC 4648 specification for the Base16 encoding including
 -- unpadded and lenient variants for lazy bytestrings
 --
-module Data.ByteString.Base16.Lazy
+module Data.ByteString.Lazy.Base16
 ( encodeBase16
 , encodeBase16'
 , decodeBase16
@@ -49,8 +49,8 @@ encodeBase16 = TL.decodeUtf8 . encodeBase16'
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 encodeBase16' :: ByteString -> ByteString
+encodeBase16' Empty = Empty
 encodeBase16' (Chunk b bs) = Chunk (B16.encodeBase16_ b) (encodeBase16' bs)
-encodeBase16' _ = Empty
 {-# INLINE encodeBase16' #-}
 
 -- | Decode a padded Base16-encoded lazy 'ByteString' value.

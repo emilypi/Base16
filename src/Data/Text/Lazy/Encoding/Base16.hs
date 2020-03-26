@@ -11,7 +11,7 @@
 -- RFC 4648 specification for the Base16 encoding including
 -- unpadded and lenient variants for lazy textual values
 --
-module Data.Text.Encoding.Base16.Lazy
+module Data.Text.Lazy.Encoding.Base16
 ( encodeBase16
 , decodeBase16
 , isBase16
@@ -19,7 +19,7 @@ module Data.Text.Encoding.Base16.Lazy
 ) where
 
 
-import qualified Data.ByteString.Base16.Lazy as B16L
+import qualified Data.ByteString.Lazy.Base16 as B16L
 
 import qualified Data.Text as T
 import Data.Text.Lazy (Text)

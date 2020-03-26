@@ -11,7 +11,7 @@ import Data.Bifunctor
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy (fromStrict)
 import "base16" Data.ByteString.Base16 as B16
-import "base16" Data.ByteString.Base16.Lazy as B16L
+import "base16" Data.ByteString.Lazy.Base16 as B16L
 import "memory" Data.ByteArray.Encoding as Mem
 import Data.ByteString.Random (random)
 import Data.Functor (void)

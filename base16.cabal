@@ -29,9 +29,9 @@ source-repository head
 library
   exposed-modules:
     Data.ByteString.Base16
-    Data.ByteString.Base16.Lazy
+    Data.ByteString.Lazy.Base16
     Data.Text.Encoding.Base16
-    Data.Text.Encoding.Base16.Lazy
+    Data.Text.Lazy.Encoding.Base16
 
   other-modules:
     Data.ByteString.Base16.Internal.Head

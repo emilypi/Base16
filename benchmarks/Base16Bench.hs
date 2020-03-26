@@ -10,7 +10,7 @@ import Criterion.Main
 import Data.ByteString.Lazy (fromStrict)
 import "memory" Data.ByteArray.Encoding as Mem
 import Data.ByteString
-import "base16" Data.ByteString.Base16.Lazy as B16
+import "base16" Data.ByteString.Lazy.Base16 as B16
 import "base16-bytestring" Data.ByteString.Base16.Lazy as Bos
 import Data.ByteString.Random (random)
 
