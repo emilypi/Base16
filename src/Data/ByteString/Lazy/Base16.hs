@@ -16,6 +16,7 @@ module Data.ByteString.Lazy.Base16
 ( encodeBase16
 , encodeBase16'
 , decodeBase16
+, decodeBase16Lenient
 , isBase16
 , isValidBase16
 ) where
@@ -57,6 +58,16 @@ decodeBase16 :: ByteString -> Either T.Text ByteString
 decodeBase16 Empty = Right Empty
 decodeBase16 (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase16 bs
 {-# INLINE decodeBase16 #-}
+
+-- | Decode a padded Base16-encoded 'ByteString' value leniently, using a
+-- strategy that never fails
+--
+-- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
+--
+decodeBase16Lenient :: ByteString -> ByteString
+decodeBase16Lenient Empty = Empty
+decodeBase16Lenient (Chunk b bs) = Chunk (B16.decodeBase16Lenient_ b) (decodeBase16Lenient bs)
+{-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a lazy 'ByteString' value is base16 encoded.
 --

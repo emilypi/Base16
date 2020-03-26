@@ -18,6 +18,7 @@ module Data.ByteString.Base16
 ( encodeBase16
 , encodeBase16'
 , decodeBase16
+, decodeBase16Lenient
 , isBase16
 , isValidBase16
 ) where
@@ -55,6 +56,15 @@ encodeBase16' = encodeBase16_
 decodeBase16 :: ByteString -> Either Text ByteString
 decodeBase16 = decodeBase16_
 {-# INLINE decodeBase16 #-}
+
+-- | Decode a padded Base16-encoded 'ByteString' value leniently, using a
+-- strategy that never fails
+--
+-- N.B.: this is not RFC 4648-compliant
+--
+decodeBase16Lenient :: ByteString -> ByteString
+decodeBase16Lenient = decodeBase16Lenient_
+{-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a 'ByteString' value is base16 encoded.
 --

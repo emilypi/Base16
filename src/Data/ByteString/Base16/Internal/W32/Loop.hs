@@ -17,12 +17,14 @@
 module Data.ByteString.Base16.Internal.W32.Loop
 ( innerLoop
 , decodeLoop
+, lenientLoop
 ) where
 
 
 import Data.Bits
 import Data.ByteString.Internal
 import Data.ByteString.Base16.Internal.Utils
+import qualified Data.ByteString.Base16.Internal.W16.Loop as W16
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -47,22 +49,9 @@ innerLoop !dptr !sptr !end = go dptr sptr
 
     !alphabet = "0123456789abcdef"#
 
-    tailRound16 !dst !src
-      | src == end = return ()
-      | otherwise = do
-        !t <- peek @Word8 src
-
-        let !a = fromIntegral (lix (unsafeShiftR t 4))
-            !b = fromIntegral (lix t)
-
-        let !w = a .|. (unsafeShiftL b 8)
-
-        poke @Word16 dst w
-
-        tailRound16 (plusPtr dst 2) (plusPtr src 1)
-
     go !dst !src
-      | plusPtr src 3 >= end = tailRound16 (castPtr dst) (castPtr src)
+      | plusPtr src 3 >= end =
+        W16.innerLoop (castPtr dst) (castPtr src) end
       | otherwise = do
 #ifdef WORDS_BIGENDIAN
         !t <- peek src
@@ -86,6 +75,7 @@ innerLoop !dptr !sptr !end = go dptr sptr
         poke @Word32 dst xx
 
         go (plusPtr dst 4) (plusPtr src 2)
+{-# INLINE innerLoop #-}
 
 -- | Hex decoding loop optimized for 32-bit architectures
 --
@@ -96,33 +86,17 @@ decodeLoop
   -> Ptr Word16
   -> Ptr Word32
   -> Ptr Word8
+  -> Int
   -> IO (Either Text ByteString)
-decodeLoop !dfp !hi !lo !dptr !sptr !end = go dptr sptr 0
+decodeLoop !dfp !hi !lo !dptr !sptr !end !nn = go dptr sptr nn
   where
     err !src = return . Left . T.pack
       $ "invalid character at offset: "
       ++ show (src `minusPtr` sptr)
 
-    tailRound16 !dst !src !n
-      | src == end = return (Right (PS dfp 0 n))
-      | otherwise = do
-        !x <- peek @Word8 src
-        !y <- peek @Word8 (plusPtr src 1)
-
-        !a <- peekByteOff hi (fromIntegral x)
-        !b <- peekByteOff lo (fromIntegral y)
-
-        if a == 0xff || b == 0xff
-        then return . Left . T.pack
-          $ "invalid character at offset: "
-          ++ show (src `minusPtr` sptr)
-        else do
-          poke @Word8 dst (a .|. b)
-          return (Right (PS dfp 0 (n + 1)))
-
-
     go !dst !src !n
-      | plusPtr src 3 >= end = tailRound16 (castPtr dst) (castPtr src) n
+      | plusPtr src 3 >= end =
+        W16.decodeLoop dfp hi lo (castPtr dst) (castPtr src) end n
       | otherwise = do
 #ifdef WORDS_BIGENDIAN
         !t <- peek @Word32 src
@@ -150,3 +124,15 @@ decodeLoop !dfp !hi !lo !dptr !sptr !end = go dptr sptr 0
             poke @Word16 dst zz
             go (plusPtr dst 2) (plusPtr src 4) (n + 2)
 {-# INLINE decodeLoop #-}
+
+lenientLoop
+  :: ForeignPtr Word8
+  -> Ptr Word8
+  -> Ptr Word8
+  -> Ptr Word8
+  -> Ptr Word8
+  -> Ptr Word8
+  -> Int
+  -> IO ByteString
+lenientLoop !dfp !hi !lo !dptr !sptr !end !nn =
+  W16.lenientLoop dfp hi lo dptr sptr end nn

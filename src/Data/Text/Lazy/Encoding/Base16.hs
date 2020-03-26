@@ -14,6 +14,7 @@
 module Data.Text.Lazy.Encoding.Base16
 ( encodeBase16
 , decodeBase16
+, decodeBase16Lenient
 , isBase16
 , isValidBase16
 ) where
@@ -40,6 +41,15 @@ encodeBase16 = B16L.encodeBase16 . TL.encodeUtf8
 decodeBase16 :: Text -> Either T.Text Text
 decodeBase16 = fmap TL.decodeUtf8 . B16L.decodeBase16 . TL.encodeUtf8
 {-# INLINE decodeBase16 #-}
+
+-- | Decode a padded Base16-encoded 'ByteString' value leniently, using a
+-- strategy that never fails
+--
+-- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
+--
+decodeBase16Lenient :: Text -> Text
+decodeBase16Lenient = TL.decodeUtf8 . B16L.decodeBase16Lenient . TL.encodeUtf8
+{-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a lazy 'Text' value is Base16-encoded.
 --

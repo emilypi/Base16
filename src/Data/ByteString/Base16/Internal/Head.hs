@@ -6,11 +6,13 @@
 module Data.ByteString.Base16.Internal.Head
 ( encodeBase16_
 , decodeBase16_
+, decodeBase16Lenient_
 ) where
 
 
 #include "MachDeps.h"
 
+import Data.ByteString (empty)
 import Data.ByteString.Internal
 import Data.ByteString.Base16.Internal.Tables
 #if WORD_SIZE_IN_BITS == 32
@@ -60,5 +62,27 @@ decodeBase16_ (PS !sfp !soff !slen)
           (castPtr dptr)
           (castPtr (plusPtr sptr soff))
           (plusPtr sptr (soff + slen))
+          0
   where
     (!q, !r) = slen `divMod` 2
+
+decodeBase16Lenient_ :: ByteString -> ByteString
+decodeBase16Lenient_ (PS !sfp !soff !slen)
+  | slen == 0 = empty
+  | otherwise = unsafeDupablePerformIO $ do
+    dfp <- mallocPlainForeignPtrBytes dlen
+    withForeignPtr dfp $ \dptr ->
+      withForeignPtr dtableHi $ \hi ->
+      withForeignPtr dtableLo $ \lo ->
+      withForeignPtr sfp $ \sptr ->
+        lenientLoop
+          dfp
+          hi
+          lo
+          (castPtr dptr)
+          (castPtr (plusPtr sptr soff))
+          (plusPtr sptr (soff + slen))
+          0
+  where
+    (!q, _) = slen `divMod` 2
+    !dlen = q * 2
