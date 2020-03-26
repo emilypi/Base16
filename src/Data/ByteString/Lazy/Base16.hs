@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Module       : Data.ByteString.Base16.Lazy
@@ -24,13 +23,10 @@ module Data.ByteString.Lazy.Base16
 
 import Prelude hiding (all, elem)
 
-import Data.ByteString.Lazy (all, elem, fromStrict)
+import Data.ByteString.Lazy (all, elem)
 import Data.ByteString.Lazy.Internal (ByteString(..))
 import qualified Data.ByteString.Base16.Internal.Head as B16
 import Data.Either
-#if __GLASGOW_HASKELL__ < 843
-import Data.Semigroup ((<>))
-#endif
 import qualified Data.Text as T
 import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as TL
@@ -59,7 +55,7 @@ encodeBase16' (Chunk b bs) = Chunk (B16.encodeBase16_ b) (encodeBase16' bs)
 --
 decodeBase16 :: ByteString -> Either T.Text ByteString
 decodeBase16 Empty = Right Empty
-decodeBase16 (Chunk b bs) = (fromStrict <$> B16.decodeBase16_ b) <> decodeBase16 bs
+decodeBase16 (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase16 bs
 {-# INLINE decodeBase16 #-}
 
 -- | Tell whether a lazy 'ByteString' value is base16 encoded.
