@@ -42,7 +42,7 @@ decodeBase16 :: Text -> Either T.Text Text
 decodeBase16 = fmap TL.decodeUtf8 . B16L.decodeBase16 . TL.encodeUtf8
 {-# INLINE decodeBase16 #-}
 
--- | Decode a padded Base16-encoded 'ByteString' value leniently, using a
+-- | Decode a padded Base16-encoded lazy 'Text' value leniently, using a
 -- strategy that never fails
 --
 -- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
