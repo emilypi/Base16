@@ -16,7 +16,6 @@ module Data.Text.Encoding.Base16.Error
 
 
 import Data.Text (Text)
-import Data.Text.Encoding.Error (UnicodeException)
 
 -- | This data type represents the type of decoding errors of
 -- various kinds as they pertain to decoding 'Text' values.

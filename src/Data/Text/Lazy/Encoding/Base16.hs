@@ -21,6 +21,7 @@ module Data.Text.Lazy.Encoding.Base16
 ) where
 
 
+import Data.Bifunctor (first)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Base16 as B16L
 
@@ -53,11 +54,11 @@ decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
 --
 decodeBase16With
     :: Text
-    -> (ByteString -> Either (Base16Error e) Text)
-    -> Either (Base16Error e) Text
+    -> (ByteString -> Either err Text)
+    -> Either (Base16Error err) Text
 decodeBase16With t f = case B16L.decodeBase16 $ TL.encodeUtf8 t of
   Left de -> Left $ DecodeError de
-  Right a -> f a
+  Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}
 
 -- | Decode a Base16-encoded lazy 'Text' value leniently, using a

@@ -59,7 +59,7 @@ decodeBase16 Empty = Right Empty
 decodeBase16 (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase16 bs
 {-# INLINE decodeBase16 #-}
 
--- | Decode a padded Base16-encoded 'ByteString' value leniently, using a
+-- | Decode a Base16-encoded 'ByteString' value leniently, using a
 -- strategy that never fails
 --
 -- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!

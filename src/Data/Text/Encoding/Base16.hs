@@ -21,6 +21,7 @@ module Data.Text.Encoding.Base16
 ) where
 
 
+import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as B16
 import Data.Text (Text)
@@ -36,8 +37,7 @@ encodeBase16 :: Text -> Text
 encodeBase16 = B16.encodeBase16 . T.encodeUtf8
 {-# INLINE encodeBase16 #-}
 
--- | Decode a padded Base16-encoded lazy 'Text' value, catching unicode
--- exceptions if thrown in the decoding process.
+-- | Decode a Base16-encoded lazy 'Text' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -60,7 +60,7 @@ decodeBase16With t f = case B16.decodeBase16 $ T.encodeUtf8 t of
   Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}
 
--- | Decode a padded Base16-encoded lazy 'Text' value leniently, using a
+-- | Decode a Base16-encoded lazy 'Text' value leniently, using a
 -- strategy that never fails, catching unicode exceptions raised in the
 -- process of converting to text values.
 --
