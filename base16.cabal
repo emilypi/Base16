@@ -31,6 +31,7 @@ library
     Data.ByteString.Base16
     Data.ByteString.Lazy.Base16
     Data.Text.Encoding.Base16
+    Data.Text.Encoding.Base16.Error
     Data.Text.Lazy.Encoding.Base16
 
   other-modules:
