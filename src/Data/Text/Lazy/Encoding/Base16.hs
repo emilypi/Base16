@@ -14,14 +14,17 @@
 module Data.Text.Lazy.Encoding.Base16
 ( encodeBase16
 , decodeBase16
+, decodeBase16With
 , decodeBase16Lenient
 , isBase16
 , isValidBase16
 ) where
 
 
-import Data.Bifunctor (first)
+import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Base16 as B16L
+
+import qualified Data.Text as T
 import Data.Text.Encoding.Base16.Error (Base16Error(..))
 import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as TL
@@ -34,38 +37,41 @@ encodeBase16 :: Text -> Text
 encodeBase16 = B16L.encodeBase16 . TL.encodeUtf8
 {-# INLINE encodeBase16 #-}
 
--- | Decode a padded Base16-encoded lazy 'Text' value.
---
--- /Warning/: in the conversion to unicode text, exceptions may be thrown.
--- Please use 'decodeBase16'' if you are unsure if you are working with
--- true base16-encoded values, or if you expect garbage.
+-- | Decode a Base16-encoded lazy 'Text' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
-decodeBase16 :: Text -> Either Base16Error Text
-decodeBase16 t = case B16L.decodeBase16 (TL.encodeUtf8 t) of
-  Left e -> Left (DecodeError e)
-  Right a -> case TL.decodeUtf8' a of
-    Left e' -> Left (UnicodeError e')
-    Right b -> Right b
+decodeBase16 :: Text -> Either T.Text Text
+decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
 {-# INLINE decodeBase16 #-}
 
--- | Decode a padded Base16-encoded lazy 'Text' value leniently, using a
+-- | Attempt to decode a lazy 'Text' value as Base16, converting from
+-- 'ByteString' to 'Text' according to some encoding function. In practice,
+-- This is something like 'decodeUtf8'', which may produce an error.
+
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+decodeBase16With
+    :: Text
+    -> (ByteString -> Either (Base16Error e) Text)
+    -> Either (Base16Error e) Text
+decodeBase16With t f = case B16L.decodeBase16 $ TL.encodeUtf8 t of
+  Left de -> Left $ DecodeError de
+  Right a -> f a
+{-# INLINE decodeBase16With #-}
+
+-- | Decode a Base16-encoded lazy 'Text' value leniently, using a
 -- strategy that never fails.
 --
 -- /Warning/: in the conversion to unicode text, exceptions may be thrown.
--- Please use 'decodeBase16Lenient'' if you are unsure if you are working
--- with true base16-encoded values, or if you expect garbage.
+-- Please use 'decodeBase16'' if you are unsure if you are working with
+-- base16-encoded values, or if you expect garbage.
 --
 -- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
 --
-decodeBase16Lenient :: Text -> Either Base16Error Text
-decodeBase16Lenient = first UnicodeError
-  . TL.decodeUtf8'
-  . B16L.decodeBase16Lenient
-  . TL.encodeUtf8
+decodeBase16Lenient :: Text -> Text
+decodeBase16Lenient = TL.decodeLatin1 . B16L.decodeBase16Lenient . TL.encodeUtf8
 {-# INLINE decodeBase16Lenient #-}
-
 
 -- | Tell whether a lazy 'Text' value is Base16-encoded.
 --

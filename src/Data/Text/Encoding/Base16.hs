@@ -12,21 +12,20 @@
 -- unpadded and lenient variants for text values
 --
 module Data.Text.Encoding.Base16
-( Base16Error(..)
-, encodeBase16
+( encodeBase16
 , decodeBase16
+, decodeBase16With
 , decodeBase16Lenient
 , isBase16
 , isValidBase16
 ) where
 
 
-import Data.Bifunctor (first)
+import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as B16
-import Data.Either (isRight)
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Text.Encoding.Base16.Error (Base16Error(..))
-import Data.Text.Encoding.Error (UnicodeException)
 import qualified Data.Text.Encoding as T
 
 -- | Encode a 'Text' value in Base16 with padding.
@@ -42,13 +41,24 @@ encodeBase16 = B16.encodeBase16 . T.encodeUtf8
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
-decodeBase16 :: Text -> Either Base16Error Text
-decodeBase16 t = case B16.decodeBase16 (T.encodeUtf8 t) of
-  Left e -> Left (DecodeError e)
-  Right a -> case T.decodeUtf8' a of
-    Left e' -> Left (UnicodeError e')
-    Right b -> Right b
+decodeBase16 :: Text -> Either T.Text Text
+decodeBase16 = fmap T.decodeLatin1 . B16.decodeBase16 . T.encodeUtf8
 {-# INLINE decodeBase16 #-}
+
+-- | Attempt to decode a lazy 'Text' value as Base16, converting from
+-- 'ByteString' to 'Text' according to some encoding function. In practice,
+-- This is something like 'decodeUtf8'', which may produce an error.
+
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+decodeBase16With
+    :: Text
+    -> (ByteString -> Either (Base16Error e) Text)
+    -> Either (Base16Error e) Text
+decodeBase16With t f = case B16.decodeBase16 $ T.encodeUtf8 t of
+  Left de -> Left $ DecodeError de
+  Right a -> f a
+{-# INLINE decodeBase16With #-}
 
 -- | Decode a padded Base16-encoded lazy 'Text' value leniently, using a
 -- strategy that never fails, catching unicode exceptions raised in the
@@ -56,11 +66,8 @@ decodeBase16 t = case B16.decodeBase16 (T.encodeUtf8 t) of
 --
 -- N.B.: this is not RFC 4648-compliant.
 --
-decodeBase16Lenient :: Text -> Either Base16Error Text
-decodeBase16Lenient = first UnicodeError
-  . T.decodeUtf8'
-  . B16.decodeBase16Lenient
-  . T.encodeUtf8
+decodeBase16Lenient :: Text -> Text
+decodeBase16Lenient = T.decodeLatin1 . B16.decodeBase16Lenient . T.encodeUtf8
 {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a 'Text' value is Base16-encoded.

@@ -23,12 +23,11 @@ import Data.Text.Encoding.Error (UnicodeException)
 -- Namely, to distinguish between decoding errors from opaque
 -- unicode exceptions caught in the unicode decoding process.
 --
-data Base16Error
+data Base16Error e
   = DecodeError Text
     -- ^ The error associated with decoding failure
     -- as a result of the Base16 decoding process
-  | UnicodeError UnicodeException
+  | CharSetError e
     -- ^ The error associated with the decoding failure
-    -- as a result of the unicode 'Text' decoding process
-    -- (i.e. 'decodeUtf8')
+    -- as a result of the conversion process 'Text' -> charset
   deriving (Eq, Show)
