@@ -109,39 +109,3 @@ main =
       e <- ctob <$> random 100000
       f <- ctob <$> random 1000000
       return ((a,b,c,d,e,f),(fromStrict a,fromStrict b,fromStrict c,fromStrict d,fromStrict e,fromStrict f))
-
-data MegaFunctor f a where
-  Pure :: a -> MegaFunctor f a
-  Ap :: f a -> MegaFunctor f (a -> b) -> MegaFunctor f b
-  Select :: MegaFunctor f (Either a b) -> f (a -> b) -> MegaFunctor f b
-  Join :: MegaFunctor (MegaFunctor f) a -> MegaFunctor f a
-
-instance Functor f => Functor (MegaFunctor f) where
-  fmap f (Pure a) = Pure (f a)
-  fmap f (Ap x y) = Ap x ((f .) <$> y)
-  fmap f (Select x y) = Select (fmap f <$> x) (fmap f <$> y)
-  fmap f (Bind x y) = Bind x (fmap f <$> y)
-
-instance Functor f => Applicative (MegaFunctor f) where
-  pure = Pure
-  Pure f <*> y = fmap f y
-  Ap x y <*> z = Ap x (flip <$> y <*> z)
-  f@(Select _ _) <*> x = select (Left <$> f) ((&) <$> x)
-  x@(Bind _ _) <*> y = do
-    x1 <- x
-    x1 <$> y
-
-instance Functor f => Selective (MegaFunctor f) where
-  select x (Pure y) = either y id <$> x -- Generalised identity
-  select x y@(Ap _ _) = (\e f -> either f id e) <$> x <*> y
-  select x (Select y z) = Select (select (f <$> x) (g <$> y)) (h <$> z) -- Associativity
-    where
-      f x = Right <$> x
-      g y a = bimap (, a) ($a) y
-      h = uncurry
-  select x y@(Bind _ _) = x >>= \case
-    Left a -> ($a) <$> y
-    Right b -> pure b
-
-instance Functor f => Monad (MegaFunctor f) where
-  return = pure

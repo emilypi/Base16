@@ -53,11 +53,11 @@ decodeBase16 = fmap T.decodeLatin1 . B16.decodeBase16 . T.encodeUtf8
 --
 decodeBase16With
     :: Text
-    -> (ByteString -> Either (Base16Error e) Text)
-    -> Either (Base16Error e) Text
+    -> (ByteString -> Either err Text)
+    -> Either (Base16Error err) Text
 decodeBase16With t f = case B16.decodeBase16 $ T.encodeUtf8 t of
   Left de -> Left $ DecodeError de
-  Right a -> f a
+  Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}
 
 -- | Decode a padded Base16-encoded lazy 'Text' value leniently, using a

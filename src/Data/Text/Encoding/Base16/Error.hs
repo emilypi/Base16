@@ -27,7 +27,7 @@ data Base16Error e
   = DecodeError Text
     -- ^ The error associated with decoding failure
     -- as a result of the Base16 decoding process
-  | CharSetError e
+  | ConversionError e
     -- ^ The error associated with the decoding failure
-    -- as a result of the conversion process 'Text' -> charset
+    -- as a result of the conversion process `'ByteString' -> 'Text'
   deriving (Eq, Show)
