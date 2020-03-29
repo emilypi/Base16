@@ -48,14 +48,21 @@ decodeBase16 = fmap T.decodeLatin1 . B16.decodeBase16 . T.encodeUtf8
 -- | Attempt to decode a lazy 'Text' value as Base16, converting from
 -- 'ByteString' to 'Text' according to some encoding function. In practice,
 -- This is something like 'decodeUtf8'', which may produce an error.
-
+--
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
+-- Example:
+--
+-- @
+-- 'decodeBase16With' 'T.decodeUtf8''
+--   :: 'Text' -> 'Either' ('Base16Error' 'UnicodeException') 'Text'
+-- @
+--
 decodeBase16With
-    :: Text
-    -> (ByteString -> Either err Text)
+    :: (ByteString -> Either err Text)
+    -> Text
     -> Either (Base16Error err) Text
-decodeBase16With t f = case B16.decodeBase16 $ T.encodeUtf8 t of
+decodeBase16With f t = case B16.decodeBase16 $ T.encodeUtf8 t of
   Left de -> Left $ DecodeError de
   Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}

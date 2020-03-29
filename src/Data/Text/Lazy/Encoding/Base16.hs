@@ -15,7 +15,7 @@ module Data.Text.Lazy.Encoding.Base16
 ( encodeBase16
 , decodeBase16
 , decodeBase16With
-, decodeBase16Lenient
+-- , decodeBase16Lenient
 , isBase16
 , isValidBase16
 ) where
@@ -49,30 +49,37 @@ decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
 -- | Attempt to decode a lazy 'Text' value as Base16, converting from
 -- 'ByteString' to 'Text' according to some encoding function. In practice,
 -- This is something like 'decodeUtf8'', which may produce an error.
-
+--
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
+-- Example:
+--
+-- @
+-- 'decodeBase16With' 'T.decodeUtf8''
+--   :: 'Text' -> 'Either' ('Base16Error' 'UnicodeException') 'Text'
+-- @
+--
 decodeBase16With
-    :: Text
-    -> (ByteString -> Either err Text)
+    :: (ByteString -> Either err Text)
+    -> Text
     -> Either (Base16Error err) Text
-decodeBase16With t f = case B16L.decodeBase16 $ TL.encodeUtf8 t of
+decodeBase16With f t = case B16L.decodeBase16 $ TL.encodeUtf8 t of
   Left de -> Left $ DecodeError de
   Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}
 
--- | Decode a Base16-encoded lazy 'Text' value leniently, using a
--- strategy that never fails.
---
--- /Warning/: in the conversion to unicode text, exceptions may be thrown.
--- Please use 'decodeBase16'' if you are unsure if you are working with
--- base16-encoded values, or if you expect garbage.
---
--- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
---
-decodeBase16Lenient :: Text -> Text
-decodeBase16Lenient = TL.decodeLatin1 . B16L.decodeBase16Lenient . TL.encodeUtf8
-{-# INLINE decodeBase16Lenient #-}
+-- -- | Decode a Base16-encoded lazy 'Text' value leniently, using a
+-- -- strategy that never fails.
+-- --
+-- -- /Warning/: in the conversion to unicode text, exceptions may be thrown.
+-- -- Please use 'decodeBase16'' if you are unsure if you are working with
+-- -- base16-encoded values, or if you expect garbage.
+-- --
+-- -- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
+-- --
+-- decodeBase16Lenient :: Text -> Text
+-- decodeBase16Lenient = TL.decodeLatin1 . B16L.decodeBase16Lenient . TL.encodeUtf8
+-- {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a lazy 'Text' value is Base16-encoded.
 --

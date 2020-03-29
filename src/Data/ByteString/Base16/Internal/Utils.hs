@@ -4,8 +4,12 @@ module Data.ByteString.Base16.Internal.Utils
 ( aix
 , w32
 , w64
+, reChunk
 , writeNPlainForeignPtrBytes
 ) where
+
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as B
 
 import Foreign.ForeignPtr
 import Foreign.Ptr
@@ -16,6 +20,7 @@ import GHC.ForeignPtr
 import GHC.Word
 
 import System.IO.Unsafe
+
 
 -- | Read 'Word8' index off alphabet addr
 --
@@ -47,3 +52,22 @@ writeNPlainForeignPtrBytes !n as = unsafeDupablePerformIO $ do
   where
     go !_ [] = return ()
     go !p (x:xs) = poke p x >> go (plusPtr p 1) xs
+
+-- | Form a list of chunks, and rechunk the list of bytestrings
+-- into length multiples of 2
+--
+reChunk :: [ByteString] -> [ByteString]
+reChunk [] = []
+reChunk (c:cs) = case B.length c `divMod` 2 of
+    (_, 0) -> c : reChunk cs
+    (n, _) -> case B.splitAt (n * 2) c of
+      (m, q) -> m : cont_ q cs
+  where
+    cont_ q [] = [q]
+    cont_ q (a:as) = case B.splitAt 1 a of
+      ~(x, y) -> let q' = q <> x
+        in if B.length q' == 2
+          then
+            let as' = if B.null y then as else y:as
+            in q' : reChunk as'
+          else cont_ q' as

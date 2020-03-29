@@ -98,7 +98,9 @@ decodeLoop !dfp !hi !lo !dptr !sptr !end !nn = go dptr sptr nn
             go (plusPtr dst 1) (plusPtr src 2) (n + 1)
 {-# INLINE decodeLoop #-}
 
--- | Lenient hex decoding loop optimized for 16-bit architectures
+
+-- | Lenient lazy hex decoding loop optimized for 16-bit architectures.
+-- When the 'Right' case is returned, a byte
 --
 lenientLoop
   :: ForeignPtr Word8
@@ -112,7 +114,7 @@ lenientLoop
 lenientLoop !dfp !hi !lo !dptr !sptr !end !nn = goHi dptr sptr nn
   where
     goHi !dst !src !n
-      | src >= end = return (PS dfp 0 n)
+      | src == end = return (PS dfp 0 (n + 1))
       | otherwise = do
         !x <- peek @Word8 src
         !a <- peekByteOff hi (fromIntegral x)
@@ -122,7 +124,7 @@ lenientLoop !dfp !hi !lo !dptr !sptr !end !nn = goHi dptr sptr nn
           | otherwise -> goLo dst (plusPtr src 1) a n
 
     goLo !dst !src !a !n
-      | src >= end = return (PS dfp 0 n)
+      | src == end = return (PS dfp 0 n)
       | otherwise = do
         !y <- peek @Word8 src
         !b <- peekByteOff lo (fromIntegral y)
