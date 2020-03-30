@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE TypeApplications #-}
@@ -9,7 +10,7 @@ module Main
 
 import Data.Bifunctor
 import Data.ByteString (ByteString)
-import Data.ByteString.Lazy (fromStrict)
+import Data.ByteString.Lazy (fromStrict, toStrict)
 import "base16" Data.ByteString.Base16 as B16
 import "base16" Data.ByteString.Lazy.Base16 as B16L
 import "memory" Data.ByteArray.Encoding as Mem
@@ -30,6 +31,7 @@ tests = testGroup "Base16 Tests"
     [ testVectors
     , sanityTests
     , alphabetTests
+    , lenientTests
     ]
 
 testVectors :: TestTree
@@ -157,12 +159,18 @@ alphabetTests = testGroup "Alphabet tests"
       , conforms 4
       , conforms 5
       , conforms 6
+      , conforms 32
+      , conforms 33
+      , conforms 1001
       ]
     , testGroup "Lazy"
       [ conformsL 0
       , conformsL 4
       , conformsL 5
       , conformsL 6
+      , conformsL 32
+      , conformsL 33
+      , conformsL 1001
       ]
     ]
   where
@@ -177,3 +185,41 @@ alphabetTests = testGroup "Alphabet tests"
       let b = B16L.encodeBase16' bs
       assertBool ("failed validity: " ++ show b) $ B16L.isValidBase16 b
       assertBool ("failed correctness: " ++ show b) $ B16L.isBase16 b
+
+lenientTests :: TestTree
+lenientTests = testGroup "Lenient Tests"
+    [ testGroup "strict encode/lenient decode"
+      [ testCaseB16 "" ""
+      , testCaseB16 "f" "6+6"
+      , testCaseB16 "fo" "6$6+6|f"
+      , testCaseB16 "foo" "==========6$$66()*f6f"
+      , testCaseB16 "foob" "66^%$&^6f6f62"
+      , testCaseB16 "fooba" "666f()*#@6f#)(@*)6()*)2()61"
+      , testCaseB16 "foobar" "6@6@6@f@6@f@6@2@6@1@7@2++++++++++++++++++++++++"
+      ]
+    , testGroup "lazy encode/decode"
+      [ testCaseB16L "" ""
+      , testCaseB16L "f" "6+++++++____++++++======*%$@#%#^*$^6"
+      , testCaseB16L "fo" "6$6+6|f"
+      , testCaseB16L "foo" "==========6$$66()*f6f"
+      , testCaseB16L "foob" "66^%$&^6f6f62"
+      , testCaseB16L "fooba" "666f()*#@6f#)(@*)6()*)2()61"
+      , testCaseB16L "foobar" "6@6@6@f@6@f@6@2@6@1@7@2++++++++++++++++++++++++"
+      ]
+    ]
+  where
+    testCaseB16 s t =
+      testCaseSteps (show $ if s == "" then "empty" else s) $ \step -> do
+        let t0 = B16.decodeBase16 (B16.encodeBase16' s)
+            t1 = B16.decodeBase16Lenient t
+
+        step "compare decoding"
+        t0 @=? Right t1
+
+    testCaseB16L s t =
+      testCaseSteps (show $ if s == "" then "empty" else s) $ \step -> do
+        let t0 = fmap toStrict $ B16L.decodeBase16 (B16L.encodeBase16' s)
+            t1 = Right . toStrict $ B16L.decodeBase16Lenient t
+
+        step "compare decoding"
+        t0 @=? t1
