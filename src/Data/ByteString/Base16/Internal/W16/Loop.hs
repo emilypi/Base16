@@ -114,7 +114,7 @@ lenientLoop
 lenientLoop !dfp !hi !lo !dptr !sptr !end !nn = goHi dptr sptr nn
   where
     goHi !dst !src !n
-      | src == end = return (PS dfp 0 (n + 1))
+      | src == end = return (PS dfp 0 n)
       | otherwise = do
         !x <- peek @Word8 src
         !a <- peekByteOff hi (fromIntegral x)
