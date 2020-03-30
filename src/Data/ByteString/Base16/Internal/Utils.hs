@@ -61,7 +61,7 @@ reChunk [] = []
 reChunk (c:cs) = case B.length c `divMod` 2 of
     (_, 0) -> c : reChunk cs
     (n, _) -> case B.splitAt (n * 2) c of
-      (m, q) -> m : cont_ q cs
+      ~(m, q) -> m : cont_ q cs
   where
     cont_ q [] = [q]
     cont_ q (a:as) = case B.splitAt 1 a of
