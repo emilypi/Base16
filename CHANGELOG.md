@@ -1,5 +1,14 @@
 # Revision history for base16
 
+## 0.2.0
+
+* Add lenient decoders
+* Fix bug in `Text` `decodeBase16` which failed on invalid UTF-8 values as a result of decoding
+* Add `decodeBase16With` combinators
+
+## 0.1.3
+
+* Add lazy variants for `Text` and `ByteString` values
 
 ## 0.1.2.1 -- 2020-02-17
 
