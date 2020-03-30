@@ -24,7 +24,6 @@ module Data.Text.Lazy.Encoding.Base16
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Base16 as B16L
-
 import qualified Data.Text as T
 import Data.Text.Encoding.Base16.Error (Base16Error(..))
 import Data.Text.Lazy (Text)
@@ -61,7 +60,9 @@ decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
 --
 decodeBase16With
     :: (ByteString -> Either err Text)
+      -- ^ convert a bytestring to text (e.g. 'T.decodeUtf8'')
     -> Text
+      -- ^ Input text to decode
     -> Either (Base16Error err) Text
 decodeBase16With f t = case B16L.decodeBase16 $ TL.encodeUtf8 t of
   Left de -> Left $ DecodeError de
