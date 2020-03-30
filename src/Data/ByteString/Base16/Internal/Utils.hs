@@ -65,7 +65,7 @@ reChunk (c:cs) = case B.length c `divMod` 2 of
   where
     cont_ q [] = [q]
     cont_ q (a:as) = case B.splitAt 1 a of
-      ~(x, y) -> let q' = q <> x
+      ~(x, y) -> let q' = B.append q x
         in if B.length q' == 2
           then
             let as' = if B.null y then as else y:as
