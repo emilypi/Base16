@@ -28,5 +28,5 @@ data Base16Error e
     -- as a result of the Base16 decoding process
   | ConversionError e
     -- ^ The error associated with the decoding failure
-    -- as a result of the conversion process `'ByteString' -> 'Text'
+    -- as a result of the conversion process
   deriving (Eq, Show)
