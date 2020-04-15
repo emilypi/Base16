@@ -15,13 +15,13 @@ module Data.ByteString.Base16.Internal.Head
 import Data.ByteString (empty)
 import Data.ByteString.Internal
 import Data.ByteString.Base16.Internal.Tables
-#if WORD_SIZE_IN_BITS == 32
-import Data.ByteString.Base16.Internal.W32.Loop
-#elif WORD_SIZE_IN_BITS >= 64
-import Data.ByteString.Base16.Internal.W64.Loop
-#else
+-- #if WORD_SIZE_IN_BITS == 32
+-- import Data.ByteString.Base16.Internal.W32.Loop
+-- #elif WORD_SIZE_IN_BITS >= 64
+-- import Data.ByteString.Base16.Internal.W64.Loop
+-- #else
 import Data.ByteString.Base16.Internal.W16.Loop
-#endif
+-- #endif
 import Data.Text (Text)
 
 import Foreign.Ptr

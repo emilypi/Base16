@@ -38,28 +38,21 @@ import GHC.Word
 -- | Hex encoding inner loop optimized for 16-bit architectures
 --
 innerLoop
-    :: Ptr Word16
+    :: Ptr Word8
     -> Ptr Word8
     -> Ptr Word8
     -> IO ()
 innerLoop !dptr !sptr !end = go dptr sptr
   where
-    lix !a = aix (fromIntegral a .&. 0x0f) alphabet
-    {-# INLINE lix #-}
-
-    !alphabet = "0123456789abcdef"#
+    !hex = "0123456789abcdef"#
 
     go !dst !src
       | src == end = return ()
       | otherwise = do
         !t <- peek src
 
-        let !a = fromIntegral (lix (unsafeShiftR t 4))
-            !b = fromIntegral (lix t)
-
-        let !w = a .|. (unsafeShiftL b 8)
-
-        poke dst w
+        poke dst (aix (unsafeShiftR t 4) hex)
+        poke (plusPtr dst 1) (aix (t .&. 0x0f) hex)
 
         go (plusPtr dst 2) (plusPtr src 1)
 {-# INLINE innerLoop #-}

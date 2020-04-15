@@ -113,14 +113,16 @@ decodeLoop !dfp !hi !lo !dptr !sptr !end !nn = go dptr sptr nn
         !c <- peekByteOff @Word8 hi y
         !d <- peekByteOff @Word8 lo z
 
-        let !zz = fromIntegral (a .|. b)
-               .|. (unsafeShiftL (fromIntegral (c .|. d)) 8)
         if
           | a == 0xff -> err src
           | b == 0xff -> err (plusPtr src 1)
           | c == 0xff -> err (plusPtr src 2)
           | d == 0xff -> err (plusPtr src 3)
           | otherwise -> do
+
+            let !zz = fromIntegral (a .|. b)
+                  .|. (unsafeShiftL (fromIntegral (c .|. d)) 8)
+
             poke @Word16 dst zz
             go (plusPtr dst 2) (plusPtr src 4) (n + 2)
 {-# INLINE decodeLoop #-}
