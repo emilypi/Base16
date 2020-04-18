@@ -36,15 +36,13 @@ library
 
   other-modules:
     Data.ByteString.Base16.Internal.Head
-    Data.ByteString.Base16.Internal.Tables
     Data.ByteString.Base16.Internal.Utils
     Data.ByteString.Base16.Internal.W16.Loop
-    Data.ByteString.Base16.Internal.W32.Loop
-    Data.ByteString.Base16.Internal.W64.Loop
 
   build-depends:
       base        >=4.10 && <5
     , bytestring  ^>=0.10
+    , primitive
     , text        ^>=1.2
 
   hs-source-dirs:   src
