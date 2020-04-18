@@ -1,5 +1,9 @@
 # Revision history for base16
 
+## 0.2.0.1
+
+* Improved performance. Decode and encode are now 3.5x-5x the existing hex encoding libray performance.
+
 ## 0.2.0
 
 * Add lenient decoders
