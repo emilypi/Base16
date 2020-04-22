@@ -21,7 +21,7 @@ contribution counts.
 ## Code
 
 If you would like to contribute code to fix a bug, add a new feature, or
-otherwise improve `base64`, pull requests are most welcome. It's a good idea to
+otherwise improve `base16`, pull requests are most welcome. It's a good idea to
 [submit an issue](https://github.com/emilypi/base32/issues/new) to
 discuss the change before plowing into writing code.
 
