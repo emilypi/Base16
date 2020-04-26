@@ -30,9 +30,11 @@ library
   exposed-modules:
     Data.ByteString.Base16
     Data.ByteString.Lazy.Base16
+    Data.ByteString.Short.Base16
     Data.Text.Encoding.Base16
     Data.Text.Encoding.Base16.Error
     Data.Text.Lazy.Encoding.Base16
+    Data.Text.Short.Encoding.Base16
 
   other-modules:
     Data.ByteString.Base16.Internal.Head
@@ -44,6 +46,7 @@ library
     , bytestring  ^>=0.10
     , primitive
     , text        ^>=1.2
+    , text-short  ^>=0.1
 
   hs-source-dirs:   src
   default-language: Haskell2010

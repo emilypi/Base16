@@ -22,6 +22,7 @@ module Data.ByteString.Lazy.Base16
 ) where
 
 
+
 import Prelude hiding (all, elem)
 
 import qualified Data.ByteString as B
@@ -30,8 +31,8 @@ import Data.ByteString.Lazy.Internal (ByteString(..))
 import qualified Data.ByteString.Base16.Internal.Head as B16
 import Data.ByteString.Base16.Internal.Utils (reChunk)
 import Data.Either
-import qualified Data.Text as T
 import Data.Text.Lazy (Text)
+import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
 
 
