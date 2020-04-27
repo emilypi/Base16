@@ -23,7 +23,7 @@ module Data.Text.Short.Encoding.Base16
 
 import Data.Bifunctor (first)
 import qualified Data.ByteString.Base16 as B16
-import Data.ByteString.Short (ShortByteString)
+import Data.ByteString.Short
 import qualified Data.ByteString.Short.Base16 as BS16
 import Data.Text (Text)
 import Data.Text.Encoding.Base16.Error
@@ -60,7 +60,7 @@ decodeBase16 =  fmap fromShortByteStringUnsafe
 -- Example:
 --
 -- @
--- 'decodeBase16With' 'T.decodeUtf8''
+-- 'decodeBase16With' '(fromText . Data.Text.Encoding.decodeUtf8' . fromShort)'
 --   :: 'ShortText' -> 'Either' ('Base16Error' 'UnicodeException') 'ShortText'
 -- @
 --

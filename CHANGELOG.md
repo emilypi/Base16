@@ -1,7 +1,8 @@
 # Revision history for base16
 
-## 0.2.1.1
+## 0.3.0.0
 
+* Changed `encodeBase16` in `ByteString.Short` to produce `ShortText`, instead of `Text`.
 * Optimized `*.Short` variants to make use of custom `ByteArray#`-backed loops
 
 ## 0.2.1

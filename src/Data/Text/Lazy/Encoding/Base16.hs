@@ -54,7 +54,7 @@ decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
 -- Example:
 --
 -- @
--- 'decodeBase16With' 'T.decodeUtf8''
+-- 'decodeBase16With' 'TL.decodeUtf8''
 --   :: 'Text' -> 'Either' ('Base16Error' 'UnicodeException') 'Text'
 -- @
 --
