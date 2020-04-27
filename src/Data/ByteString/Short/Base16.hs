@@ -26,7 +26,7 @@ module Data.ByteString.Short.Base16
 
 import Prelude hiding (all, elem)
 
-import Data.ByteString.Short (ShortByteString, toShort, fromShort)
+import Data.ByteString.Short (ShortByteString, fromShort)
 import Data.ByteString.Base16.Internal.Head
 import qualified Data.ByteString.Base16 as B16
 import Data.Text (Text)
@@ -62,7 +62,7 @@ decodeBase16 = decodeBase16Short_
 -- N.B.: this is not RFC 4648-compliant
 --
 decodeBase16Lenient :: ShortByteString -> ShortByteString
-decodeBase16Lenient = toShort . B16.decodeBase16Lenient . fromShort
+decodeBase16Lenient = decodeBase16ShortLenient_
 {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a 'ShortByteString' value is base16 encoded.
