@@ -108,7 +108,8 @@ decodeBase16ShortLenient_ (SBS !ba#)
     | l == 0 = SBS.empty
     | otherwise = runShortST $ do
       dst <- newByteArray q
-      Short.lenientLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+      q' <- Short.lenientLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+      !_ <- resizeMutableByteArray dst q'
       unsafeFreezeByteArray dst
   where
     !l = I# (sizeofByteArray# ba#)
