@@ -5,7 +5,6 @@
 module Data.ByteString.Base16.Internal.W16.ShortLoop
 ( innerLoop
 , decodeLoop
-, lenientLoop
 ) where
 
 

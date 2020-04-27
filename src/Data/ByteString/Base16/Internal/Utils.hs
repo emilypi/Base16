@@ -12,6 +12,7 @@ module Data.ByteString.Base16.Internal.Utils
 
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
+import Data.ByteString.Short.Internal
 import Data.Primitive.ByteArray
 import Data.Text (Text)
 
@@ -47,26 +48,24 @@ reChunk (c:cs) = case B.length c `divMod` 2 of
 
 -- | Used for writing 'ByteArray#'-based encodes
 --
-runEncodeST :: (forall s. ST s ByteArray) -> ByteArray
-runEncodeST enc = ByteArray
-  ( runRW#
-    ( \s0 -> case enc of
-      { ST g -> case g s0 of
-        { (# _, ByteArray r #) -> r
-        }
-      }))
+runEncodeST :: (forall s. ST s ByteArray) -> ShortByteString
+runEncodeST enc = runRW# $ \s0 -> case enc of
+  { ST g -> case g s0 of
+    { (# _, ByteArray r #) -> SBS r
+    }
+  }
 {-# INLINE runEncodeST #-}
 
 -- | Used for writing 'ByteArray#'-based encodes
 --
-runDecodeST :: (forall s. ST s (Either Text ByteArray)) -> Either Text ByteArray
-runDecodeST dec =
-  ( runRW#
-    ( \s0 -> case dec of
-      { ST g -> case g s0 of
-        { (# _, e #) -> case e of
-          Left t -> Left t
-          Right (ByteArray r) -> Right (ByteArray r)
-        }
-      }))
+runDecodeST
+    :: (forall s. ST s (Either Text ByteArray))
+    -> Either Text ShortByteString
+runDecodeST dec = runRW# $ \s0 -> case dec of
+  { ST g -> case g s0 of
+    { (# _, e #) -> case e of
+      Left t -> Left t
+      Right (ByteArray r) -> Right (SBS r)
+    }
+  }
 {-# INLINE runDecodeST #-}

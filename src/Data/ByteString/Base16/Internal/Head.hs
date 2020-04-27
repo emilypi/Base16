@@ -14,7 +14,6 @@ module Data.ByteString.Base16.Internal.Head
 
 #include "MachDeps.h"
 
-import Data.Bifunctor (second)
 import qualified Data.ByteString as BS (empty)
 import Data.ByteString.Internal
 import qualified Data.ByteString.Short as SBS (empty)
@@ -85,23 +84,21 @@ decodeBase16Lenient_ (PS !sfp !soff !slen)
 -- Short encode/decode
 
 encodeBase16Short_ :: ShortByteString -> ShortByteString
-encodeBase16Short_ (SBS !ba#) = SBS ba'#
+encodeBase16Short_ (SBS !ba#) = runEncodeST $ do
+    dst <- newByteArray l'
+    Short.innerLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+    unsafeFreezeByteArray dst
   where
     !l = I# (sizeofByteArray# ba#)
     !l' = l * 2
 
-    !(ByteArray ba'#) = runEncodeST $ do
-      dst <- newByteArray l'
-      Short.innerLoop l dst (MutableByteArray (unsafeCoerce# ba#))
-      unsafeFreezeByteArray dst
-
 decodeBase16Short_ :: ShortByteString -> Either Text ShortByteString
 decodeBase16Short_ (SBS !ba#)
-  | l == 0 = Right SBS.empty
-  | r /= 0 = Left "invalid bytestring size"
-  | otherwise = second (\(ByteArray x) -> SBS x) $ runDecodeST $ do
-    dst <- newByteArray q
-    Short.decodeLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+    | l == 0 = Right SBS.empty
+    | r /= 0 = Left "invalid bytestring size"
+    | otherwise = runDecodeST $ do
+      dst <- newByteArray q
+      Short.decodeLoop l dst (MutableByteArray (unsafeCoerce# ba#))
   where
     !l = I# (sizeofByteArray# ba#)
     (!q, !r) = divMod l 2
