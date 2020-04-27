@@ -46,6 +46,7 @@ encodeBase16_ (PS !sfp !soff !slen) =
           (plusPtr sptr (soff + slen))
   where
     !dlen = 2 * slen
+{-# INLINE encodeBase16_ #-}
 
 decodeBase16_ :: ByteString -> Either Text ByteString
 decodeBase16_ (PS !sfp !soff !slen)
@@ -63,6 +64,7 @@ decodeBase16_ (PS !sfp !soff !slen)
           0
   where
     (!q, !r) = slen `divMod` 2
+{-# INLINE decodeBase16_ #-}
 
 decodeBase16Lenient_ :: ByteString -> ByteString
 decodeBase16Lenient_ (PS !sfp !soff !slen)
@@ -79,6 +81,7 @@ decodeBase16Lenient_ (PS !sfp !soff !slen)
           0
   where
     (!q, _) = slen `divMod` 2
+{-# INLINE decodeBase16Lenient_ #-}
 
 -- ---------------------------------------------------------------- --
 -- Short encode/decode
@@ -91,6 +94,7 @@ encodeBase16Short_ (SBS !ba#) = runShortST $ do
   where
     !l = I# (sizeofByteArray# ba#)
     !l' = l * 2
+{-# INLINE encodeBase16Short_ #-}
 
 decodeBase16Short_ :: ShortByteString -> Either Text ShortByteString
 decodeBase16Short_ (SBS !ba#)
@@ -102,6 +106,7 @@ decodeBase16Short_ (SBS !ba#)
   where
     !l = I# (sizeofByteArray# ba#)
     (!q, !r) = divMod l 2
+{-# INLINE decodeBase16Short_ #-}
 
 decodeBase16ShortLenient_ :: ShortByteString -> ShortByteString
 decodeBase16ShortLenient_ (SBS !ba#)
@@ -114,3 +119,4 @@ decodeBase16ShortLenient_ (SBS !ba#)
   where
     !l = I# (sizeofByteArray# ba#)
     (!q, _) = divMod l 2
+{-# INLINE decodeBase16ShortLenient_ #-}
