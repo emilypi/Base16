@@ -1,5 +1,13 @@
 # Revision history for base16
 
+## 0.2.1.1
+
+* Optimized `*.Short` variants to make use of custom `ByteArray#`-backed loops
+
+## 0.2.1
+
+* Added support for `Text.Short` and `ByteString.Short` values
+
 ## 0.2.0.1
 
 * Improved performance. Decode and encode are now 3.5x-5x the next best lib.
