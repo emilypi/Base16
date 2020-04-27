@@ -7,19 +7,28 @@ module Data.ByteString.Base16.Internal.Head
 ( encodeBase16_
 , decodeBase16_
 , decodeBase16Lenient_
+, encodeBase16Short_
+, decodeBase16Short_
 ) where
 
 
 #include "MachDeps.h"
 
-import Data.ByteString (empty)
+import Data.Bifunctor (second)
+import qualified Data.ByteString as BS (empty)
 import Data.ByteString.Internal
+import qualified Data.ByteString.Short as SBS (empty)
+import Data.ByteString.Base16.Internal.Utils
 import Data.ByteString.Base16.Internal.W16.Loop
+import qualified Data.ByteString.Base16.Internal.W16.ShortLoop as Short
+import Data.ByteString.Short.Internal (ShortByteString(..))
+import Data.Primitive.ByteArray
 import Data.Text (Text)
 
 import Foreign.Ptr
 import Foreign.ForeignPtr
 
+import GHC.Exts
 import GHC.ForeignPtr
 
 import System.IO.Unsafe
@@ -40,7 +49,7 @@ encodeBase16_ (PS !sfp !soff !slen) =
 
 decodeBase16_ :: ByteString -> Either Text ByteString
 decodeBase16_ (PS !sfp !soff !slen)
-  | slen == 0 = Right ""
+  | slen == 0 = Right BS.empty
   | r /= 0 = Left "invalid bytestring size"
   | otherwise = unsafeDupablePerformIO $ do
     dfp <- mallocPlainForeignPtrBytes q
@@ -57,7 +66,7 @@ decodeBase16_ (PS !sfp !soff !slen)
 
 decodeBase16Lenient_ :: ByteString -> ByteString
 decodeBase16Lenient_ (PS !sfp !soff !slen)
-  | slen == 0 = empty
+  | slen == 0 = BS.empty
   | otherwise = unsafeDupablePerformIO $ do
     dfp <- mallocPlainForeignPtrBytes dlen
     withForeignPtr dfp $ \dptr ->
@@ -71,3 +80,28 @@ decodeBase16Lenient_ (PS !sfp !soff !slen)
   where
     (!q, _) = slen `divMod` 2
     !dlen = q * 2
+
+-- ---------------------------------------------------------------- --
+-- Short encode/decode
+
+encodeBase16Short_ :: ShortByteString -> ShortByteString
+encodeBase16Short_ (SBS !ba#) = SBS ba'#
+  where
+    !l = I# (sizeofByteArray# ba#)
+    !l' = l * 2
+
+    !(ByteArray ba'#) = runEncodeST $ do
+      dst <- newByteArray l'
+      Short.innerLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+      unsafeFreezeByteArray dst
+
+decodeBase16Short_ :: ShortByteString -> Either Text ShortByteString
+decodeBase16Short_ (SBS !ba#)
+  | l == 0 = Right SBS.empty
+  | r /= 0 = Left "invalid bytestring size"
+  | otherwise = second (\(ByteArray x) -> SBS x) $ runDecodeST $ do
+    dst <- newByteArray q
+    Short.decodeLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+  where
+    !l = I# (sizeofByteArray# ba#)
+    (!q, !r) = divMod l 2

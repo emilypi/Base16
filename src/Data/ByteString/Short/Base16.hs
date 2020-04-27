@@ -27,6 +27,7 @@ module Data.ByteString.Short.Base16
 import Prelude hiding (all, elem)
 
 import Data.ByteString.Short (ShortByteString, toShort, fromShort)
+import Data.ByteString.Base16.Internal.Head
 import qualified Data.ByteString.Base16 as B16
 import Data.Text (Text)
 
@@ -44,7 +45,7 @@ encodeBase16 = B16.encodeBase16 . fromShort
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 encodeBase16' :: ShortByteString -> ShortByteString
-encodeBase16' = toShort . B16.encodeBase16' . fromShort
+encodeBase16' = encodeBase16Short_
 {-# INLINE encodeBase16' #-}
 
 -- | Decode a Base16-encoded 'ShortByteString' value.
@@ -52,7 +53,7 @@ encodeBase16' = toShort . B16.encodeBase16' . fromShort
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 decodeBase16 :: ShortByteString -> Either Text ShortByteString
-decodeBase16 = fmap toShort . B16.decodeBase16 . fromShort
+decodeBase16 = decodeBase16Short_
 {-# INLINE decodeBase16 #-}
 
 -- | Decode a Base16-encoded 'ShortByteString' value leniently, using a
