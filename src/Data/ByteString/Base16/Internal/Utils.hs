@@ -7,6 +7,7 @@ module Data.ByteString.Base16.Internal.Utils
 , reChunk
 , runEncodeST
 , runDecodeST
+, runLenientST
 ) where
 
 
@@ -69,3 +70,10 @@ runDecodeST dec = runRW# $ \s0 -> case dec of
     }
   }
 {-# INLINE runDecodeST #-}
+
+runLenientST :: (forall s. ST s ByteArray) -> ShortByteString
+runLenientST dec = runRW# $ \s0 -> case dec of
+  { ST g -> case g s0 of
+    { (# _, ByteArray r #) -> SBS r
+    }
+  }

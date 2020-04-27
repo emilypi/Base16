@@ -9,6 +9,7 @@ module Data.ByteString.Base16.Internal.Head
 , decodeBase16Lenient_
 , encodeBase16Short_
 , decodeBase16Short_
+, decodeBase16ShortLenient_
 ) where
 
 
@@ -67,7 +68,7 @@ decodeBase16Lenient_ :: ByteString -> ByteString
 decodeBase16Lenient_ (PS !sfp !soff !slen)
   | slen == 0 = BS.empty
   | otherwise = unsafeDupablePerformIO $ do
-    dfp <- mallocPlainForeignPtrBytes dlen
+    dfp <- mallocPlainForeignPtrBytes q
     withForeignPtr dfp $ \dptr ->
       withForeignPtr sfp $ \sptr ->
         lenientLoop
@@ -78,7 +79,6 @@ decodeBase16Lenient_ (PS !sfp !soff !slen)
           0
   where
     (!q, _) = slen `divMod` 2
-    !dlen = q * 2
 
 -- ---------------------------------------------------------------- --
 -- Short encode/decode
@@ -102,3 +102,14 @@ decodeBase16Short_ (SBS !ba#)
   where
     !l = I# (sizeofByteArray# ba#)
     (!q, !r) = divMod l 2
+
+decodeBase16ShortLenient_ :: ShortByteString -> ShortByteString
+decodeBase16ShortLenient_ (SBS !ba#)
+    | l == 0 = SBS.empty
+    | otherwise = runLenientST $ do
+      dst <- newByteArray q
+      Short.lenientLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+      unsafeFreezeByteArray dst
+  where
+    !l = I# (sizeofByteArray# ba#)
+    (!q, _) = divMod l 2
