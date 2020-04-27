@@ -84,7 +84,7 @@ decodeBase16Lenient_ (PS !sfp !soff !slen)
 -- Short encode/decode
 
 encodeBase16Short_ :: ShortByteString -> ShortByteString
-encodeBase16Short_ (SBS !ba#) = runEncodeST $ do
+encodeBase16Short_ (SBS !ba#) = runShortST $ do
     dst <- newByteArray l'
     Short.innerLoop l dst (MutableByteArray (unsafeCoerce# ba#))
     unsafeFreezeByteArray dst
@@ -106,7 +106,7 @@ decodeBase16Short_ (SBS !ba#)
 decodeBase16ShortLenient_ :: ShortByteString -> ShortByteString
 decodeBase16ShortLenient_ (SBS !ba#)
     | l == 0 = SBS.empty
-    | otherwise = runLenientST $ do
+    | otherwise = runShortST $ do
       dst <- newByteArray q
       Short.lenientLoop l dst (MutableByteArray (unsafeCoerce# ba#))
       unsafeFreezeByteArray dst

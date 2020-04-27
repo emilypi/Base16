@@ -5,9 +5,8 @@
 module Data.ByteString.Base16.Internal.Utils
 ( aix
 , reChunk
-, runEncodeST
+, runShortST
 , runDecodeST
-, runLenientST
 ) where
 
 
@@ -47,15 +46,15 @@ reChunk (c:cs) = case B.length c `divMod` 2 of
             in q' : reChunk as'
           else cont_ q' as
 
--- | Used for writing 'ByteArray#'-based encodes
+-- | Write a byte array directly to Short bytestring
 --
-runEncodeST :: (forall s. ST s ByteArray) -> ShortByteString
-runEncodeST enc = runRW# $ \s0 -> case enc of
+runShortST :: (forall s. ST s ByteArray) -> ShortByteString
+runShortST enc = runRW# $ \s0 -> case enc of
   { ST g -> case g s0 of
     { (# _, ByteArray r #) -> SBS r
     }
   }
-{-# INLINE runEncodeST #-}
+{-# INLINE runShortST #-}
 
 -- | Used for writing 'ByteArray#'-based encodes
 --
@@ -70,10 +69,3 @@ runDecodeST dec = runRW# $ \s0 -> case dec of
     }
   }
 {-# INLINE runDecodeST #-}
-
-runLenientST :: (forall s. ST s ByteArray) -> ShortByteString
-runLenientST dec = runRW# $ \s0 -> case dec of
-  { ST g -> case g s0 of
-    { (# _, ByteArray r #) -> SBS r
-    }
-  }
