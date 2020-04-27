@@ -83,8 +83,8 @@ decodeBase16With f t = case BS16.decodeBase16 (toShortByteString t) of
 --
 decodeBase16Lenient :: ShortText -> ShortText
 decodeBase16Lenient = fromShortByteStringUnsafe
-    . BS16.decodeBase16Lenient
-    . toShortByteString
+  . BS16.decodeBase16Lenient
+  . toShortByteString
 {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a 'ShortText' value is Base16-encoded.
