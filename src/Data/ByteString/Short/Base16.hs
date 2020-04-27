@@ -30,14 +30,15 @@ import Data.ByteString.Short (ShortByteString, fromShort)
 import Data.ByteString.Base16.Internal.Head
 import qualified Data.ByteString.Base16 as B16
 import Data.Text (Text)
-
+import Data.Text.Short (ShortText)
+import Data.Text.Short.Unsafe
 
 -- | Encode a 'ShortByteString' value as Base16 'Text' with padding.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
-encodeBase16 :: ShortByteString -> Text
-encodeBase16 = B16.encodeBase16 . fromShort
+encodeBase16 :: ShortByteString -> ShortText
+encodeBase16 = fromShortByteStringUnsafe . decodeBase16ShortLenient_
 {-# INLINE encodeBase16 #-}
 
 -- | Encode a 'ShortByteString' value as a Base16 'ShortByteString'  value with padding.

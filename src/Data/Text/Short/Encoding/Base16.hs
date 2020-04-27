@@ -26,7 +26,6 @@ import qualified Data.ByteString.Base16 as B16
 import Data.ByteString.Short (ShortByteString)
 import qualified Data.ByteString.Short.Base16 as BS16
 import Data.Text (Text)
-import qualified Data.Text.Encoding.Base16 as B16T
 import Data.Text.Encoding.Base16.Error
 import Data.Text.Short
 import Data.Text.Short.Unsafe
@@ -37,7 +36,9 @@ import Data.Text.Short.Unsafe
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 encodeBase16 :: ShortText -> ShortText
-encodeBase16 = fromByteStringUnsafe . B16.encodeBase16' . toByteString
+encodeBase16 = fromShortByteStringUnsafe
+  . BS16.encodeBase16'
+  . toShortByteString
 {-# INLINE encodeBase16 #-}
 
 -- | Decode a Base16-encoded lazy 'ShortText' value.
@@ -45,7 +46,9 @@ encodeBase16 = fromByteStringUnsafe . B16.encodeBase16' . toByteString
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 decodeBase16 :: ShortText -> Either Text ShortText
-decodeBase16 = fmap fromText . B16T.decodeBase16 . toText
+decodeBase16 =  fmap fromShortByteStringUnsafe
+  . BS16.decodeBase16
+  . toShortByteString
 {-# INLINE decodeBase16 #-}
 
 -- | Attempt to decode a lazy 'ShortText' value as Base16, converting from
@@ -79,7 +82,9 @@ decodeBase16With f t = case BS16.decodeBase16 (toShortByteString t) of
 -- N.B.: this is not RFC 4648-compliant.
 --
 decodeBase16Lenient :: ShortText -> ShortText
-decodeBase16Lenient = fromText . B16T.decodeBase16Lenient . toText
+decodeBase16Lenient = fromShortByteStringUnsafe
+    . BS16.decodeBase16Lenient
+    . toShortByteString
 {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a 'ShortText' value is Base16-encoded.
