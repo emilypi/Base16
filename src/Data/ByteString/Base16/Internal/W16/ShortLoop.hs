@@ -34,6 +34,7 @@ innerLoop !slen !dst !src = go (0 :: Int) (0 :: Int)
         writeByteArray dst doff (aix (unsafeShiftR x 4) hex)
         writeByteArray dst (doff + 1) (aix (x .&. 0x0f) hex)
         go (doff + 2) (soff + 1)
+{-# inline innerLoop #-}
 
 decodeLoop
     :: Int
@@ -65,6 +66,7 @@ decodeLoop !slen !dst !src = go (0 :: Int) (0 :: Int)
           | otherwise -> do
             writeByteArray dst doff (a .|. b)
             go (doff + 1) (soff + 2)
+{-# inline decodeLoop #-}
 
 lenientLoop
     :: Int
@@ -100,3 +102,4 @@ lenientLoop !slen !dst !src = goHi (0 :: Int) (0 :: Int)
         else do
           writeByteArray dst doff (a .|. b)
           goHi (doff + 1) (soff + 1)
+{-# inline lenientLoop #-}
