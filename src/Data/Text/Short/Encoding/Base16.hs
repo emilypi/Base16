@@ -82,10 +82,10 @@ decodeBase16 =  fmap fromShortByteStringUnsafe
 decodeBase16With
     :: (ShortByteString -> Either err ShortText)
       -- ^ convert a bytestring to text (e.g. 'T.decodeUtf8'')
-    -> ShortText
-      -- ^ Input text to decode
+    -> ShortByteString
+      -- ^ Input to decode
     -> Either (Base16Error err) ShortText
-decodeBase16With f t = case BS16.decodeBase16 (toShortByteString t) of
+decodeBase16With f t = case BS16.decodeBase16 t of
   Left de -> Left $ DecodeError de
   Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}

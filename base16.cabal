@@ -1,6 +1,6 @@
 cabal-version:   2.0
 name:            base16
-version:         0.3.1.0
+version:         0.4.0.0
 synopsis:        RFC 4648-compliant Base16 encodings/decodings
 description:
   RFC 4648-compliant Base16 encodings and decodings.
@@ -59,20 +59,23 @@ library
   ghc-options:      -Wall
 
 test-suite tasty
+  other-modules:    Internal
   default-language: Haskell2010
   type:             exitcode-stdio-1.0
   hs-source-dirs:   test
-  main-is:          Base16Tests.hs
+  main-is:          Main.hs
   build-depends:
       base               >=4.10 && <5
     , base16
     , base16-bytestring
     , bytestring
-    , memory
+    , QuickCheck
     , random-bytestring
     , tasty
     , tasty-hunit
+    , tasty-quickcheck
     , text
+    , text-short
 
 benchmark bench
   default-language: Haskell2010
@@ -86,6 +89,5 @@ benchmark bench
     , bytestring
     , criterion
     , deepseq
-    , memory
     , random-bytestring
     , text

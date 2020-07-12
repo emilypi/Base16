@@ -1,7 +1,10 @@
 # Revision history for base16
 
-## 0.3.1.0
+## 0.4.0.0 - Final stable api
 
+* API for `decodeBase16With` has changed to require `ByteString` instead of `Text`. This is in alignment with work done on `base64`, which reflects
+  the same API. This will be the final design for these types of conversions.
+* Test coverage now at 94%
 * Add NFData, Exception, and Generic instances for Base16Error + @since annotations for new instances. ([#5](https://github.com/emilypi/Base16/pull/5))
 * Doc improvements and add -XTrustworty and -XSafe annotations where needed. ([#5](https://github.com/emilypi/Base16/pull/5))
 * Optimized inner loop for short text and bytestrings ([#4](https://github.com/emilypi/Base16/pull/4))

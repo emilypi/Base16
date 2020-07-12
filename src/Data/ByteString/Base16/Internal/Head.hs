@@ -63,7 +63,8 @@ decodeBase16_ (PS !sfp !soff !slen)
           (plusPtr sptr (soff + slen))
           0
   where
-    (!q, !r) = slen `divMod` 2
+    !q = slen `quot` 2
+    !r = slen `rem` 2
 {-# INLINE decodeBase16_ #-}
 
 decodeBase16Lenient_ :: ByteString -> ByteString
@@ -80,7 +81,7 @@ decodeBase16Lenient_ (PS !sfp !soff !slen)
           (plusPtr sptr (soff + slen))
           0
   where
-    (!q, _) = slen `divMod` 2
+    !q = slen `quot` 2
 {-# INLINE decodeBase16Lenient_ #-}
 
 -- ---------------------------------------------------------------- --
@@ -105,7 +106,8 @@ decodeBase16Short_ (SBS !ba#)
       Short.decodeLoop l dst (MutableByteArray (unsafeCoerce# ba#))
   where
     !l = I# (sizeofByteArray# ba#)
-    (!q, !r) = divMod l 2
+    !q = l `quot` 2
+    !r = l `rem` 2
 {-# INLINE decodeBase16Short_ #-}
 
 decodeBase16ShortLenient_ :: ShortByteString -> ShortByteString
@@ -118,5 +120,5 @@ decodeBase16ShortLenient_ (SBS !ba#)
       unsafeFreezeByteArray dst
   where
     !l = I# (sizeofByteArray# ba#)
-    (!q, _) = divMod l 2
+    !q = l `quot` 2
 {-# INLINE decodeBase16ShortLenient_ #-}
