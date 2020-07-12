@@ -40,18 +40,18 @@ data Base16Error e
   deriving
     ( Eq, Show
     , Generic
-      -- ^ @since 4.2.2
+      -- ^ @since 0.4.0.0
     )
 
 -- |
 --
--- @since 4.2.2
+-- @since 0.4.0.0
 --
 instance Exception e => Exception (Base16Error e)
 
 
 -- |
 --
--- @since 4.2.2
+-- @since 0.4.0.0
 --
 instance NFData e => NFData (Base16Error e)
