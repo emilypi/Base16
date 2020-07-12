@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Text.Encoding.Base16.Error
 -- Copyright 	: (c) 2019 Emily Pillmore
@@ -15,7 +17,13 @@ module Data.Text.Encoding.Base16.Error
 ) where
 
 
+import Control.DeepSeq (NFData(..))
+import Control.Exception (Exception(..))
+
 import Data.Text (Text)
+
+import GHC.Generics
+
 
 -- | This data type represents the type of decoding errors of
 -- various kinds as they pertain to decoding 'Text' values.
@@ -29,4 +37,21 @@ data Base16Error e
   | ConversionError e
     -- ^ The error associated with the decoding failure
     -- as a result of the conversion process
-  deriving (Eq, Show)
+  deriving
+    ( Eq, Show
+    , Generic
+      -- ^ @since 4.2.2
+    )
+
+-- |
+--
+-- @since 4.2.2
+--
+instance Exception e => Exception (Base16Error e)
+
+
+-- |
+--
+-- @since 4.2.2
+--
+instance NFData e => NFData (Base16Error e)

@@ -1,15 +1,17 @@
+{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Text.Encoding.Base16
--- Copyright 	: (c) 2019 Emily Pillmore
+-- Copyright 	: (c) 2020 Emily Pillmore
 -- License	: BSD-style
 --
 -- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
--- Stability	: Experimental
--- Portability	: portable
+-- Stability	: stable
+-- Portability	: non-portable
 --
--- This module contains the combinators implementing the
--- RFC 4648 specification for the Base16 encoding including
--- unpadded and lenient variants for text values
+-- This module contains 'Data.Text.Text'-valued combinators for
+-- implementing the RFC 4648 specification of the Base16
+-- encoding format. This includes lenient decoding variants, as well as
+-- internal and external validation for canonicity.
 --
 module Data.Text.Encoding.Base16
 ( encodeBase16
@@ -29,9 +31,15 @@ import qualified Data.Text as T
 import Data.Text.Encoding.Base16.Error (Base16Error(..))
 import qualified Data.Text.Encoding as T
 
+
 -- | Encode a 'Text' value in Base16 with padding.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> encodeBase16 "Sun"
+-- "53756e"
 --
 encodeBase16 :: Text -> Text
 encodeBase16 = B16.encodeBase16 . T.encodeUtf8
@@ -40,6 +48,14 @@ encodeBase16 = B16.encodeBase16 . T.encodeUtf8
 -- | Decode a Base16-encoded lazy 'Text' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16 "53756e"
+-- Right "Sun"
+--
+-- >>> decodeBase16 "6x"
+-- Left "invalid character at offset: 1"
 --
 decodeBase16 :: Text -> Either T.Text Text
 decodeBase16 = fmap T.decodeLatin1 . B16.decodeBase16 . T.encodeUtf8
@@ -51,11 +67,11 @@ decodeBase16 = fmap T.decodeLatin1 . B16.decodeBase16 . T.encodeUtf8
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
--- Example:
+-- === __Example__:
 --
 -- @
 -- 'decodeBase16With' 'T.decodeUtf8''
---   :: 'Text' -> 'Either' ('Base16Error' 'UnicodeException') 'Text'
+--   :: 'ByteString' -> 'Either' ('Base16Error' 'UnicodeException') 'Text'
 -- @
 --
 decodeBase16With
@@ -75,22 +91,24 @@ decodeBase16With f t = case B16.decodeBase16 $ T.encodeUtf8 t of
 --
 -- N.B.: this is not RFC 4648-compliant.
 --
+-- === __Examples__:
+--
+-- >>> decodeBase16Lenient "53756e"
+-- "Sun"
+--
+-- >>> decodeBase16 "6x6x"
+-- "f"
+--
 decodeBase16Lenient :: Text -> Text
 decodeBase16Lenient = T.decodeLatin1 . B16.decodeBase16Lenient . T.encodeUtf8
 {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a 'Text' value is Base16-encoded.
 --
--- Examples:
---
--- This example will fail. It conforms to the alphabet, but
--- is not valid because it has an incorrect (odd) length.
+-- === __Examples__:
 --
 -- >>> isBase16 "666f6"
 -- False
---
--- This example will succeed because it satisfies the alphabet
--- and is considered "valid" (i.e. of the correct size and shape).
 --
 -- >>> isBase16 "666f"
 -- True
@@ -105,17 +123,10 @@ isBase16 = B16.isBase16 . T.encodeUtf8
 -- only that it conforms to the correct shape. To check whether it is a true
 -- Base16 encoded 'Text' value, use 'isBase16'.
 --
--- Examples:
---
--- This example will fail because it does not conform to the Hex
--- alphabet.
+-- === __Examples__:
 --
 -- >>> isValidBase16 "666f+/6"
 -- False
---
--- This example will succeed because it satisfies the alphabet
--- and is considered "valid" (i.e. of the correct size and shape), but
--- is not correct base16 because it is the wrong shape.
 --
 -- >>> isValidBase16 "666f6"
 -- True
