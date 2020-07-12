@@ -1,15 +1,17 @@
+{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Text.Encoding.Base16.Lazy
--- Copyright 	: (c) 2019 Emily Pillmore
+-- Copyright 	: (c) 2020 Emily Pillmore
 -- License	: BSD-style
 --
 -- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
--- Stability	: Experimental
--- Portability	: portable
+-- Stability	: stable
+-- Portability	: non-portable
 --
--- This module contains the combinators implementing the
--- RFC 4648 specification for the Base16 encoding including
--- unpadded and lenient variants for lazy textual values
+-- This module contains 'Data.Text.Lazy.Text'-valued combinators for
+-- implementing the RFC 4648 specification of the Base16
+-- encoding format. This includes lenient decoding variants, as well as
+-- internal and external validation for canonicity.
 --
 module Data.Text.Lazy.Encoding.Base16
 ( encodeBase16
@@ -29,9 +31,15 @@ import Data.Text.Encoding.Base16.Error (Base16Error(..))
 import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as TL
 
+
 -- | Encode a lazy 'Text' value in Base16 with padding.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> encodeBase16 "Sun"
+-- "53756e"
 --
 encodeBase16 :: Text -> Text
 encodeBase16 = B16L.encodeBase16 . TL.encodeUtf8
@@ -40,6 +48,14 @@ encodeBase16 = B16L.encodeBase16 . TL.encodeUtf8
 -- | Decode a Base16-encoded lazy 'Text' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16 "53756e"
+-- Right "Sun"
+--
+-- >>> decodeBase16 "6x"
+-- Left "invalid character at offset: 1"
 --
 decodeBase16 :: Text -> Either T.Text Text
 decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
@@ -51,11 +67,9 @@ decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
--- Example:
---
 -- @
 -- 'decodeBase16With' 'TL.decodeUtf8''
---   :: 'Text' -> 'Either' ('Base16Error' 'UnicodeException') 'Text'
+--   :: 'ByteString' -> 'Either' ('Base16Error' 'UnicodeException') 'Text'
 -- @
 --
 decodeBase16With
@@ -78,22 +92,24 @@ decodeBase16With f t = case B16L.decodeBase16 $ TL.encodeUtf8 t of
 --
 -- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
 --
+-- === __Examples__:
+--
+-- >>> decodeBase16Lenient "53756e"
+-- "Sun"
+--
+-- >>> decodeBase16 "6x6x"
+-- "f"
+--
 decodeBase16Lenient :: Text -> Text
 decodeBase16Lenient = TL.decodeLatin1 . B16L.decodeBase16Lenient . TL.encodeUtf8
 {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a lazy 'Text' value is Base16-encoded.
 --
--- Examples:
---
--- This example will fail. It conforms to the alphabet, but
--- is not valid because it has an incorrect (odd) length.
+-- === __Examples__:
 --
 -- >>> isBase16 "666f6"
 -- False
---
--- This example will succeed because it satisfies the alphabet
--- and is considered "valid" (i.e. of the correct size and shape).
 --
 -- >>> isBase16 "666f"
 -- True
@@ -108,17 +124,10 @@ isBase16 = B16L.isBase16 . TL.encodeUtf8
 -- only that it conforms to the correct shape. To check whether it is a true
 -- Base16 encoded 'Text' value, use 'isBase16'.
 --
--- Examples:
---
--- This example will fail because it does not conform to the Hex
--- alphabet.
+-- === __Examples__:
 --
 -- >>> isValidBase16 "666f+/6"
 -- False
---
--- This example will succeed because it satisfies the alphabet
--- and is considered "valid" (i.e. of the correct size and shape), but
--- is not correct base16 because it is the wrong shape.
 --
 -- >>> isValidBase16 "666f6"
 -- True
