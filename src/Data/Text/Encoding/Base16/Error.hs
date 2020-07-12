@@ -2,14 +2,14 @@
 {-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Text.Encoding.Base16.Error
--- Copyright 	: (c) 2019 Emily Pillmore
--- License	: BSD-style
+-- Copyright    : (c) 2019 Emily Pillmore
+-- License      : BSD-style
 --
--- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
--- Stability	: Experimental
--- Portability	: portable
+-- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
+-- Stability    : Experimental
+-- Portability  : portable
 --
--- This module contains the error types raised (not as exceptions!)
+-- This module contains the error types raised
 -- in the decoding process.
 --
 module Data.Text.Encoding.Base16.Error

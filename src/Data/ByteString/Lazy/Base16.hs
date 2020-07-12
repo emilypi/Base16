@@ -2,12 +2,12 @@
 {-# LANGUAGE Trustworthy #-}
 -- |
 -- Module       : Data.ByteString.Lazy.Base16
--- Copyright 	: (c) 2020 Emily Pillmore
--- License	: BSD-style
+-- Copyright    : (c) 2020 Emily Pillmore
+-- License      : BSD-style
 --
--- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
--- Stability	: stable
--- Portability	: non-portable
+-- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
+-- Stability    : stable
+-- Portability  : non-portable
 --
 -- This module contains 'Data.ByteString.Lazy.ByteString'-valued combinators for
 -- implementing the RFC 4648 specification of the Base16
@@ -92,7 +92,7 @@ decodeBase16 (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase16 bs
 -- >>> decodeBase16Lenient "53756e"
 -- "Sun"
 --
--- >>> decodeBase16 "6x6x"
+-- >>> decodeBase16Lenient "6x6x"
 -- "f"
 --
 decodeBase16Lenient :: ByteString -> ByteString
