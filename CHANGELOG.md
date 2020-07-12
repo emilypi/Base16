@@ -1,5 +1,11 @@
 # Revision history for base16
 
+## 0.3.1.0
+
+* Add NFData, Exception, and Generic instances for Base16Error + @since annotations for new instances. ([#5](https://github.com/emilypi/Base16/pull/5))
+* Doc improvements and add -XTrustworty and -XSafe annotations where needed. ([#5](https://github.com/emilypi/Base16/pull/5))
+* Optimized inner loop for short text and bytestrings ([#4](https://github.com/emilypi/Base16/pull/4))
+
 ## 0.3.0.0
 
 * Changed `encodeBase16` in `ByteString.Short` to produce `ShortText`, instead of `Text`.
