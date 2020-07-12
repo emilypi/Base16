@@ -1,12 +1,12 @@
 {-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Text.Encoding.Base16
--- Copyright 	: (c) 2020 Emily Pillmore
--- License	: BSD-style
+-- Copyright    : (c) 2020 Emily Pillmore
+-- License      : BSD-style
 --
--- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
--- Stability	: stable
--- Portability	: non-portable
+-- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
+-- Stability    : stable
+-- Portability  : non-portable
 --
 -- This module contains 'Data.Text.Text'-valued combinators for
 -- implementing the RFC 4648 specification of the Base16
@@ -96,7 +96,7 @@ decodeBase16With f t = case B16.decodeBase16 $ T.encodeUtf8 t of
 -- >>> decodeBase16Lenient "53756e"
 -- "Sun"
 --
--- >>> decodeBase16 "6x6x"
+-- >>> decodeBase16Lenient "6x6x"
 -- "f"
 --
 decodeBase16Lenient :: Text -> Text

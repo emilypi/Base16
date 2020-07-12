@@ -1,12 +1,12 @@
 {-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Text.Encoding.Base16.Lazy
--- Copyright 	: (c) 2020 Emily Pillmore
--- License	: BSD-style
+-- Copyright    : (c) 2020 Emily Pillmore
+-- License      : BSD-style
 --
--- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
--- Stability	: stable
--- Portability	: non-portable
+-- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
+-- Stability    : stable
+-- Portability  : non-portable
 --
 -- This module contains 'Data.Text.Lazy.Text'-valued combinators for
 -- implementing the RFC 4648 specification of the Base16
@@ -97,7 +97,7 @@ decodeBase16With f t = case B16L.decodeBase16 $ TL.encodeUtf8 t of
 -- >>> decodeBase16Lenient "53756e"
 -- "Sun"
 --
--- >>> decodeBase16 "6x6x"
+-- >>> decodeBase16Lenient "6x6x"
 -- "f"
 --
 decodeBase16Lenient :: Text -> Text
@@ -116,6 +116,7 @@ decodeBase16Lenient = TL.decodeLatin1 . B16L.decodeBase16Lenient . TL.encodeUtf8
 --
 isBase16 :: Text -> Bool
 isBase16 = B16L.isBase16 . TL.encodeUtf8
+
 {-# INLINE isBase16 #-}
 
 -- | Tell whether a lazy 'Text' value is a valid Base16 format.
