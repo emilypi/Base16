@@ -72,7 +72,7 @@ decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
 --   :: 'ByteString' -> 'Either' ('Base16Error' 'UnicodeException') 'Text'
 -- @
 --
--- @since 0.4.0.0
+-- @since 0.3.0.0
 --
 decodeBase16With
     :: (ByteString -> Either err Text)

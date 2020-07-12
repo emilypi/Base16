@@ -79,7 +79,7 @@ decodeBase16 =  fmap fromShortByteStringUnsafe
 --   :: 'ShortByteString' -> 'Either' ('Base16Error' 'UnicodeException') 'ShortText'
 -- @
 --
--- @since 0.4.0.0
+-- @since 0.3.0.0
 --
 decodeBase16With
     :: (ShortByteString -> Either err ShortText)

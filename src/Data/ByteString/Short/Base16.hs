@@ -41,6 +41,8 @@ import Data.Text.Short.Unsafe
 -- >>> encodeBase16 "Sun"
 -- "53756e"
 --
+-- @since 0.3.0.0
+--
 encodeBase16 :: ShortByteString -> ShortText
 encodeBase16 = fromShortByteStringUnsafe . decodeBase16ShortLenient_
 {-# INLINE encodeBase16 #-}
