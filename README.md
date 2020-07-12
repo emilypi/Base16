@@ -21,7 +21,7 @@ The following types are supported for Hex alphabet codecs:
 Additionally this library has
 
 - Much better performance than `base16-bytestring` for encode and decode, with a more conventional api.
-- Optics for handling more complex structures with Base64 representations via the `base16-lens` package
+- Optics for handling more complex structures with Base16 representations via the `base16-lens` package
 - Checks for both validity and correctness of Base16 encodings.
 
 There are no dependencies aside from those bundled with GHC.
