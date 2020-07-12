@@ -77,10 +77,10 @@ decodeBase16 = fmap T.decodeLatin1 . B16.decodeBase16 . T.encodeUtf8
 decodeBase16With
     :: (ByteString -> Either err Text)
       -- ^ convert a bytestring to text (e.g. 'T.decodeUtf8'')
-    -> Text
-      -- ^ Input text to decode
+    -> ByteString
+      -- ^ Input to decode
     -> Either (Base16Error err) Text
-decodeBase16With f t = case B16.decodeBase16 $ T.encodeUtf8 t of
+decodeBase16With f t = case B16.decodeBase16 t of
   Left de -> Left $ DecodeError de
   Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}
