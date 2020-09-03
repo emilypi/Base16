@@ -21,11 +21,14 @@ module Internal where
 
 
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.ByteString.Lazy.Char8 as LBS8
 import qualified Data.ByteString.Short as SBS
 import "base16" Data.ByteString.Base16 as B16
 import "base16" Data.ByteString.Lazy.Base16 as LB16
 import "base16" Data.ByteString.Short.Base16 as SB16
+import Data.Char (toLower)
 import Data.Proxy
 import Data.String
 import Data.Text (Text)
@@ -85,6 +88,7 @@ class
   decode :: bs -> Either Text bs
   lenient :: bs -> bs
 
+  lower :: bs -> bs
   correct :: bs -> Bool
   validate :: bs -> Bool
 
@@ -97,6 +101,7 @@ instance Harness 'B16 BS.ByteString where
   lenient = B16.decodeBase16Lenient
   correct = B16.isBase16
   validate = B16.isValidBase16
+  lower = BS8.map toLower
 
 instance Harness 'LB16 LBS.ByteString where
   label = "Lazy ByteString"
@@ -106,6 +111,7 @@ instance Harness 'LB16 LBS.ByteString where
   lenient = LB16.decodeBase16Lenient
   correct = LB16.isBase16
   validate = LB16.isValidBase16
+  lower = LBS8.map toLower
 
 instance Harness 'SB16 SBS.ShortByteString where
   label = "Short ByteString"
@@ -115,6 +121,7 @@ instance Harness 'SB16 SBS.ShortByteString where
   lenient = SB16.decodeBase16Lenient
   correct = SB16.isBase16
   validate = SB16.isValidBase16
+  lower = SBS.toShort . BS8.map toLower . SBS.fromShort
 
 instance Harness 'T16 Text where
   label = "Text"
@@ -124,6 +131,7 @@ instance Harness 'T16 Text where
   lenient = T16.decodeBase16Lenient
   correct = T16.isBase16
   validate = T16.isValidBase16
+  lower = T.map toLower
 
 instance Harness 'TL16 TL.Text where
   label = "Lazy Text"
@@ -133,6 +141,7 @@ instance Harness 'TL16 TL.Text where
   lenient = TL16.decodeBase16Lenient
   correct = TL16.isBase16
   validate = TL16.isValidBase16
+  lower = TL.map toLower
 
 instance Harness 'TS16 TS.ShortText where
   label = "Short Text"
@@ -142,6 +151,7 @@ instance Harness 'TS16 TS.ShortText where
   lenient = TS16.decodeBase16Lenient
   correct = TS16.isBase16
   validate = TS16.isValidBase16
+  lower = TS.fromText . T.map toLower . TS.toText
 
 class Harness a cs
   => TextHarness (a :: Impl) cs bs
