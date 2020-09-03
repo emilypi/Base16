@@ -1,5 +1,10 @@
 # Revision history for base16
 
+## 0.3.0.1
+
+* Allow for mixed-case lenient decoding + validation
+* Bump testing for mixed-case hex
+
 ## 0.3.0.0
 
 * API for `decodeBase16With` has changed to require `ByteString` instead of `Text`. This is in alignment with work done on `base64`, which reflects
