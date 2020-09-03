@@ -174,19 +174,39 @@ prop_bos_coherence = testGroup "prop_bos_coherence"
 
 rfcVectors :: forall a b proxy. Harness a b => proxy a -> TestTree
 rfcVectors _ = testGroup "RFC 4648 Test Vectors"
-    [ testCaseB16 "" ""
-    , testCaseB16 "f" "66"
-    , testCaseB16 "fo" "666f"
-    , testCaseB16 "foo" "666f6f"
-    , testCaseB16 "foob" "666f6f62"
-    , testCaseB16 "fooba" "666f6f6261"
-    , testCaseB16 "foobar" "666f6f626172"
+    [ testGroup "lower-case"
+      [ testCaseB16 "" ""
+      , testCaseB16 "f" "66"
+      , testCaseB16 "fo" "666f"
+      , testCaseB16 "foo" "666f6f"
+      , testCaseB16 "foob" "666f6f62"
+      , testCaseB16 "fooba" "666f6f6261"
+      , testCaseB16 "foobar" "666f6f626172"
+      ]
+    ,  testGroup "upper-case"
+      [ testCaseB16 "" ""
+      , testCaseB16 "f" "66"
+      , testCaseB16 "fo" "666F"
+      , testCaseB16 "foo" "666F6F"
+      , testCaseB16 "foob" "666F6F62"
+      , testCaseB16 "fooba" "666F6F6261"
+      , testCaseB16 "foobar" "666F6F626172"
+      ]
+    ,  testGroup "mixed-case"
+      [ testCaseB16 "" ""
+      , testCaseB16 "f" "66"
+      , testCaseB16 "fo" "666F"
+      , testCaseB16 "foo" "666F6f"
+      , testCaseB16 "foob" "666F6f62"
+      , testCaseB16 "fooba" "666F6f6261"
+      , testCaseB16 "foobar" "666F6f626172"
+      ]
     ]
   where
     testCaseB16 s t =
       testCaseSteps (show $ if s == "" then "empty" else s) $ \step -> do
         step "encode is sound"
-        t @=? encode @a s
+        lower t @=? encode @a s
 
         step "decode is sound"
         Right s @=? decode (encode s)
@@ -230,9 +250,9 @@ lenientTests _ = testGroup "Lenient Tests"
     [ testCaseB16 "" ""
     , testCaseB16 "f" "6+6"
     , testCaseB16 "fo" "6$6+6|f"
-    , testCaseB16 "foo" "==========6$$66()*f6f"
-    , testCaseB16 "foob" "66^%$&^6f6f62"
-    , testCaseB16 "fooba" "666f()*#@6f#)(@*)6()*)2()61"
+    , testCaseB16 "foo" "==========6$$66()*F6f"
+    , testCaseB16 "foob" "66^%$&^6f6F62"
+    , testCaseB16 "fooba" "666f()*#@6F#)(@*)6()*)2()61"
     , testCaseB16 "foobar" "6@6@6@f@6@f@6@2@6@1@7@2++++++++++++++++++++++++"
     ]
   where

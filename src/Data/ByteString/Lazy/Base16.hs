@@ -99,7 +99,7 @@ decodeBase16Lenient :: ByteString -> ByteString
 decodeBase16Lenient = fromChunks
   . fmap B16.decodeBase16Lenient_
   . reChunk
-  . fmap (B.filter (flip elem "0123456789abcdef"))
+  . fmap (B.filter (flip elem "0123456789abcdefABCDEF"))
   . toChunks
 {-# INLINE decodeBase16Lenient #-}
 
@@ -132,5 +132,5 @@ isBase16 bs = isValidBase16 bs && isRight (decodeBase16 bs)
 -- True
 --
 isValidBase16 :: ByteString -> Bool
-isValidBase16 = all (flip elem "0123456789abcdef")
+isValidBase16 = all (flip elem "0123456789abcdefABCDEF")
 {-# INLINE isValidBase16 #-}
