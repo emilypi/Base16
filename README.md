@@ -9,7 +9,7 @@ For the companion optics and pattern synonyms, see [base16-lens](https://hackage
 
 ### Summary
 
-The following types are supported for Hex alphabet codecs:
+The following types have supported codecs:
 
 - `Data.ByteString`
 - `Data.ByteString.Lazy`
@@ -21,6 +21,7 @@ The following types are supported for Hex alphabet codecs:
 Additionally this library has
 
 - Much better performance than `base16-bytestring` for encode and decode, with a more conventional api.
+- Support for mixed-case hex decoding (defaults to lower-case encoding by convention)
 - Optics for handling more complex structures with Base16 representations via the `base16-lens` package
 - Checks for both validity and correctness of Base16 encodings.
 
