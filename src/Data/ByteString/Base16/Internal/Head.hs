@@ -37,49 +37,34 @@ import System.IO.Unsafe
 -- | Head of the base16 encoding loop - marshal data, assemble loops
 --
 encodeBase16_ :: ByteString -> ByteString
-encodeBase16_ (PS !sfp !soff !slen) =
-    unsafeCreate dlen $ \dptr ->
-      withForeignPtr sfp $ \sptr ->
-        innerLoop
-          (castPtr dptr)
-          (castPtr (plusPtr sptr soff))
-          (plusPtr sptr (soff + slen))
-  where
-    !dlen = 2 * slen
+encodeBase16_ (PS !sfp _ !slen) =
+    unsafeCreate (2 * slen) $ \dptr ->
+    withForeignPtr sfp $ \sptr ->
+      innerLoop dptr sptr (plusPtr sptr slen)
 {-# INLINE encodeBase16_ #-}
 
 decodeBase16_ :: ByteString -> Either Text ByteString
-decodeBase16_ (PS !sfp !soff !slen)
+decodeBase16_ (PS !sfp _ !slen)
   | slen == 0 = Right BS.empty
   | r /= 0 = Left "invalid bytestring size"
   | otherwise = unsafeDupablePerformIO $ do
     dfp <- mallocPlainForeignPtrBytes q
     withForeignPtr dfp $ \dptr ->
       withForeignPtr sfp $ \sptr ->
-        decodeLoop
-          dfp
-          dptr
-          (plusPtr sptr soff)
-          (plusPtr sptr (soff + slen))
-          0
+        decodeLoop dfp dptr sptr (plusPtr sptr slen) q
   where
     !q = slen `quot` 2
     !r = slen `rem` 2
 {-# INLINE decodeBase16_ #-}
 
 decodeBase16Lenient_ :: ByteString -> ByteString
-decodeBase16Lenient_ (PS !sfp !soff !slen)
+decodeBase16Lenient_ (PS !sfp _ !slen)
   | slen == 0 = BS.empty
   | otherwise = unsafeDupablePerformIO $ do
     dfp <- mallocPlainForeignPtrBytes q
     withForeignPtr dfp $ \dptr ->
       withForeignPtr sfp $ \sptr ->
-        lenientLoop
-          dfp
-          dptr
-          (plusPtr sptr soff)
-          (plusPtr sptr (soff + slen))
-          0
+        lenientLoop dfp dptr sptr (plusPtr sptr slen) 0
   where
     !q = slen `quot` 2
 {-# INLINE decodeBase16Lenient_ #-}
