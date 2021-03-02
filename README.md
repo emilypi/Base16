@@ -1,6 +1,6 @@
 # Base16
 
-[![Build Status](https://travis-ci.com/emilypi/base16.svg?branch=master)](https://travis-ci.com/emilypi/base16)
+![Build Status](https://github.com/emilypi/base16/workflows/Haskell-CI/badge.svg)
 [![Hackage](https://img.shields.io/hackage/v/base16.svg)](https://hackage.haskell.org/package/base16)
 
 RFC 4648-compliant Base16 encoding and decoding.
