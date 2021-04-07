@@ -5,8 +5,8 @@ let
   inherit (nixpkgs) pkgs;
 
   f = { mkDerivation, base, base16-bytestring, bytestring
-      , criterion, deepseq, primitive, QuickCheck, random-bytestring
-      , stdenv, tasty, tasty-hunit, tasty-quickcheck, text, text-short
+      , criterion, deepseq, lib, primitive, QuickCheck, random-bytestring
+      , tasty, tasty-hunit, tasty-quickcheck, text, text-short
       }:
       mkDerivation {
         pname = "base16";
@@ -25,7 +25,7 @@ let
         ];
         homepage = "https://github.com/emilypi/base16";
         description = "Fast RFC 4648-compliant Base16 encoding";
-        license = stdenv.lib.licenses.bsd3;
+        license = lib.licenses.bsd3;
       };
 
   haskellPackages = if compiler == "default"
