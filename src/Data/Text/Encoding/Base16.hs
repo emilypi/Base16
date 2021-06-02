@@ -45,7 +45,7 @@ encodeBase16 :: Text -> Text
 encodeBase16 = B16.encodeBase16 . T.encodeUtf8
 {-# INLINE encodeBase16 #-}
 
--- | Decode a Base16-encoded lazy 'Text' value.
+-- | Decode a Base16-encoded 'Text' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -61,7 +61,7 @@ decodeBase16 :: Text -> Either T.Text Text
 decodeBase16 = fmap T.decodeLatin1 . B16.decodeBase16 . T.encodeUtf8
 {-# INLINE decodeBase16 #-}
 
--- | Attempt to decode a lazy 'Text' value as Base16, converting from
+-- | Attempt to decode a 'Text' value as Base16, converting from
 -- 'ByteString' to 'Text' according to some encoding function. In practice,
 -- This is something like 'decodeUtf8'', which may produce an error.
 --
@@ -87,7 +87,7 @@ decodeBase16With f t = case B16.decodeBase16 t of
   Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}
 
--- | Decode a Base16-encoded lazy 'Text' value leniently, using a
+-- | Decode a Base16-encoded 'Text' value leniently, using a
 -- strategy that never fails, catching unicode exceptions raised in the
 -- process of converting to text values.
 --
