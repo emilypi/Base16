@@ -1,6 +1,6 @@
 cabal-version:   2.0
 name:            base16
-version:         0.3.0.1
+version:         0.3.1.0
 synopsis:        Fast RFC 4648-compliant Base16 encoding
 description:
   RFC 4648-compliant Base16 encodings and decodings.
@@ -20,7 +20,7 @@ extra-doc-files:
   README.md
 
 tested-with:
-  GHC ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.4 || ==9.0.1
+  GHC ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || ==9.0.1
 
 source-repository head
   type:     git
@@ -44,7 +44,7 @@ library
 
   build-depends:
       base        >=4.10    && <5
-    , bytestring  ^>=0.10
+    , bytestring  >=0.10 && <0.12
     , deepseq     ^>=1.4
     , primitive   >=0.6     && <0.8
     , text        ^>=1.2
@@ -61,9 +61,9 @@ test-suite tasty
   hs-source-dirs:   test
   main-is:          Main.hs
   build-depends:
-      base               >=4.10 && <5
+      base               >=4.11 && <5
     , base16
-    , base16-bytestring
+    , base16-bytestring  >=1.0
     , bytestring
     , QuickCheck
     , random-bytestring
@@ -79,9 +79,9 @@ benchmark bench
   hs-source-dirs:   benchmarks
   main-is:          Base16Bench.hs
   build-depends:
-      base               >=4.10 && <5
+      base               >=4.11 && <5
     , base16
-    , base16-bytestring
+    , base16-bytestring  >=1.0
     , bytestring
     , criterion
     , deepseq
