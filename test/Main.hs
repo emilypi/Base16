@@ -166,7 +166,7 @@ prop_bos_coherence :: TestTree
 prop_bos_coherence = testGroup "prop_bos_coherence"
   [ testProperty "prop_std_bos_coherence" $ \bs ->
       Right bs == B16.decodeBase16 (B16.encodeBase16' bs)
-      && Right bs == (Right (fst $ Bos.decode $ Bos.encode bs) :: Either T.Text BS.ByteString)
+      && Right bs == Bos.decode (Bos.encode bs)
   ]
 
 -- ---------------------------------------------------------------- --
