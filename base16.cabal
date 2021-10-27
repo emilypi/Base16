@@ -1,6 +1,6 @@
 cabal-version:   2.0
 name:            base16
-version:         0.3.1.0
+version:         0.3.0.2
 synopsis:        Fast RFC 4648-compliant Base16 encoding
 description:
   RFC 4648-compliant Base16 encodings and decodings.
@@ -19,8 +19,7 @@ extra-doc-files:
   CHANGELOG.md
   README.md
 
-tested-with:
-  GHC ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || ==9.0.1
+tested-with:     GHC ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.7 || ==9.0.1
 
 source-repository head
   type:     git
@@ -43,10 +42,10 @@ library
     Data.ByteString.Base16.Internal.W16.ShortLoop
 
   build-depends:
-      base        >=4.10    && <5
+      base        >=4.10 && <5
     , bytestring  >=0.10 && <0.12
     , deepseq     ^>=1.4
-    , primitive   >=0.6     && <0.8
+    , primitive   >=0.6  && <0.8
     , text        ^>=1.2
     , text-short  ^>=0.1
 
