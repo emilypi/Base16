@@ -24,7 +24,9 @@ import GHC.ST (ST(..))
 -- | Read 'Word8' index off alphabet addr
 --
 aix :: Word8 -> Addr# -> Word8
-aix (W8# i) alpha = W8# (indexWord8OffAddr# alpha (word2Int# i))
+aix w alpha = W8# (indexWord8OffAddr# alpha i)
+  where
+    !(I# i) = fromIntegral w
 {-# INLINE aix #-}
 
 -- | Form a list of chunks, and rechunk the list of bytestrings
