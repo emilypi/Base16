@@ -43,9 +43,7 @@ import Data.Text.Short.Unsafe
 -- "53756e"
 --
 encodeBase16 :: ShortText -> ShortText
-encodeBase16 = fromShortByteStringUnsafe
-  . BS16.encodeBase16'
-  . toShortByteString
+encodeBase16 = BS16.encodeBase16 . toShortByteString
 {-# INLINE encodeBase16 #-}
 
 -- | Decode a Base16-encoded 'ShortText' value.
