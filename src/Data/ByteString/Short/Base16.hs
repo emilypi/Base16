@@ -44,7 +44,7 @@ import Data.Text.Short.Unsafe
 -- @since 0.3.0.0
 --
 encodeBase16 :: ShortByteString -> ShortText
-encodeBase16 = fromShortByteStringUnsafe . decodeBase16ShortLenient_
+encodeBase16 = fromShortByteStringUnsafe . encodeBase16'
 {-# INLINE encodeBase16 #-}
 
 -- | Encode a 'ShortByteString' value as a Base16 'ShortByteString'  value with padding.
