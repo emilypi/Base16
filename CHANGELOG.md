@@ -1,5 +1,10 @@
 # Revision history for base16
 
+## 0.3.2.0
+
+* Fix incorrect behavior in `Data.ByteString.Short.Base16#encodeBase16`
+* Drop base GHC <8.10
+
 ## 0.3.0.1
 
 * Allow for mixed-case lenient decoding + validation
