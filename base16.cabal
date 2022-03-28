@@ -20,10 +20,7 @@ extra-doc-files:
   README.md
 
 tested-with:
-  GHC ==8.4.4
-   || ==8.6.5
-   || ==8.8.4
-   || ==8.10.7
+  GHC ==8.10.7
    || ==9.0.1
    || ==9.2.1
 
@@ -48,7 +45,7 @@ library
     Data.ByteString.Base16.Internal.W16.ShortLoop
 
   build-depends:
-      base        >=4.10 && <4.17
+      base        >=4.14 && <4.17
     , bytestring  >=0.10 && <0.12
     , deepseq     ^>=1.4
     , primitive   >=0.6  && <0.8
@@ -66,7 +63,7 @@ test-suite tasty
   hs-source-dirs:   test
   main-is:          Main.hs
   build-depends:
-      base               >=4.11 && <4.17
+      base               >=4.14 && <4.17
     , base16
     , base16-bytestring  >=1.0
     , bytestring
@@ -84,7 +81,7 @@ benchmark bench
   hs-source-dirs:   benchmarks
   main-is:          Base16Bench.hs
   build-depends:
-      base               >=4.11 && <4.17
+      base               >=4.14 && <4.17
     , base16
     , base16-bytestring  >=1.0
     , bytestring
