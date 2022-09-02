@@ -49,7 +49,7 @@ library
     , bytestring  >=0.10 && <0.12
     , deepseq     ^>=1.4
     , primitive   >=0.6  && <0.8
-    , text        ^>=1.2
+    , text        ^>=1.2 || ^>= 2.0
     , text-short  ^>=0.1
 
   hs-source-dirs:   src
