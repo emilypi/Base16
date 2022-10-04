@@ -18,6 +18,7 @@ module Data.ByteString.Base16
 ( encodeBase16
 , encodeBase16'
 , decodeBase16
+, decodeBase16'
 , decodeBase16Lenient
 , isBase16
 , isValidBase16
@@ -74,6 +75,22 @@ encodeBase16' = encodeBase16_
 decodeBase16 :: ByteString -> Either Text ByteString
 decodeBase16 = decodeBase16_
 {-# INLINE decodeBase16 #-}
+
+-- | Decode Base16 'Text'.
+--
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16' "53756e"
+-- Right "Sun"
+--
+-- >>> decodeBase16' "6x"
+-- Left "invalid character at offset: 1"
+--
+decodeBase16' :: Text -> Either Text ByteString
+decodeBase16' = decodeBase16 . T.encodeUtf8
+{-# INLINE decodeBase16' #-}
 
 -- | Decode a Base16-encoded 'ByteString' value leniently, using a
 -- strategy that never fails
