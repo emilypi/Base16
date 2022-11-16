@@ -21,8 +21,9 @@ extra-doc-files:
 
 tested-with:
   GHC ==8.10.7
-   || ==9.0.1
-   || ==9.2.1
+   || ==9.0.2
+   || ==9.2.5
+   || ==9.4.3
 
 source-repository head
   type:     git
@@ -45,7 +46,7 @@ library
     Data.ByteString.Base16.Internal.W16.ShortLoop
 
   build-depends:
-      base        >=4.14 && <4.17
+      base        >=4.14 && <4.18
     , bytestring  >=0.10 && <0.12
     , deepseq     ^>=1.4
     , primitive   >=0.6  && <0.8
