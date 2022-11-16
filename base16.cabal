@@ -1,4 +1,4 @@
-cabal-version:   2.0
+cabal-version:   3.0
 name:            base16
 version:         0.3.2.0
 synopsis:        Fast RFC 4648-compliant Base16 encoding
@@ -8,7 +8,7 @@ description:
 
 homepage:        https://github.com/emilypi/base16
 bug-reports:     https://github.com/emilypi/base16/issues
-license:         BSD3
+license:         BSD-3-Clause
 license-file:    LICENSE
 author:          Emily Pillmore
 maintainer:      emilypi@cohomolo.gy
@@ -64,7 +64,7 @@ test-suite tasty
   hs-source-dirs:   test
   main-is:          Main.hs
   build-depends:
-      base               >=4.14 && <4.17
+      base               >=4.14 && <4.18
     , base16
     , base16-bytestring  >=1.0
     , bytestring
@@ -82,7 +82,7 @@ benchmark bench
   hs-source-dirs:   benchmarks
   main-is:          Base16Bench.hs
   build-depends:
-      base               >=4.14 && <4.17
+      base               >=4.14 && <4.18
     , base16
     , base16-bytestring  >=1.0
     , bytestring
