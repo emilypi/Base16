@@ -18,17 +18,18 @@ module Data.ByteString.Short.Base16
 ( encodeBase16
 , encodeBase16'
 , decodeBase16
+, decodeBase16'
 , decodeBase16Lenient
 , isBase16
 , isValidBase16
 ) where
 
 
-import Data.ByteString.Short (ShortByteString, fromShort)
+import Data.ByteString.Short
 import Data.ByteString.Base16.Internal.Head
 import qualified Data.ByteString.Base16 as B16
 import Data.Text (Text)
-import Data.Text.Short (ShortText)
+import Data.Text.Short
 import Data.Text.Short.Unsafe
 
 
@@ -75,6 +76,22 @@ encodeBase16' = encodeBase16Short_
 decodeBase16 :: ShortByteString -> Either Text ShortByteString
 decodeBase16 = decodeBase16Short_
 {-# INLINE decodeBase16 #-}
+
+-- | Decode Base16 'Text'.
+--
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16' "53756e"
+-- Right "Sun"
+--
+-- >>> decodeBase16' "6x"
+-- Left "invalid character at offset: 1"
+--
+decodeBase16' :: ShortText -> Either Text ShortByteString
+decodeBase16' = decodeBase16 . toShortByteString
+{-# INLINE decodeBase16' #-}
 
 -- | Decode a Base16-encoded 'ShortByteString' value leniently, using a
 -- strategy that never fails
