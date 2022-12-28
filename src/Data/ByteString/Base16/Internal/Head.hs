@@ -1,11 +1,11 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
-{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Data.ByteString.Base16.Internal.Head
 ( encodeBase16_
 , decodeBase16_
+, decodeBase16Typed_
 , decodeBase16Lenient_
 , encodeBase16Short_
 , decodeBase16Short_
@@ -15,6 +15,7 @@ module Data.ByteString.Base16.Internal.Head
 
 #include "MachDeps.h"
 
+import Data.Base16.Types.Internal (Base16(..))
 import qualified Data.ByteString as BS (empty)
 import Data.ByteString.Internal
 import qualified Data.ByteString.Short as SBS (empty)
@@ -61,11 +62,28 @@ decodeBase16_ (PS !sfp !soff !slen)
           dptr
           (plusPtr sptr soff)
           (plusPtr sptr (soff + slen))
-          0
+          q
   where
     !q = slen `quot` 2
     !r = slen `rem` 2
 {-# INLINE decodeBase16_ #-}
+
+decodeBase16Typed_ :: Base16 ByteString -> ByteString
+decodeBase16Typed_ (Base16 (PS !sfp !soff !slen)) =
+  unsafeDupablePerformIO $ do
+    dfp <- mallocPlainForeignPtrBytes q
+    withForeignPtr dfp $ \dptr ->
+      withForeignPtr sfp $ \sptr ->
+        decodeLoopTyped
+          dfp
+          dptr
+          (plusPtr sptr soff)
+          (plusPtr sptr (soff + slen))
+          q
+  where
+    !q = slen `quot` 2
+    !r = slen `rem` 2
+{-# INLINE decodeBase16Typed_ #-}
 
 decodeBase16Lenient_ :: ByteString -> ByteString
 decodeBase16Lenient_ (PS !sfp !soff !slen)

@@ -31,6 +31,7 @@ source-repository head
 
 library
   exposed-modules:
+    Data.Base16.Types
     Data.ByteString.Base16
     Data.ByteString.Lazy.Base16
     Data.ByteString.Short.Base16
@@ -40,6 +41,7 @@ library
     Data.Text.Short.Encoding.Base16
 
   other-modules:
+    Data.Base16.Types.Internal
     Data.ByteString.Base16.Internal.Head
     Data.ByteString.Base16.Internal.Utils
     Data.ByteString.Base16.Internal.W16.Loop
