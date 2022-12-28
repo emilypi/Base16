@@ -1,5 +1,9 @@
 # Revision history for base16
 
+## 0.3.2.1
+
+* Add support for GHC 9.4
+* Added `decodeBase16'` to `Data.ByteString.Base16*` (thanks to @shlevy [#20](https://github.com/emilypi/Base16/pull/20))
 ## 0.3.2.0
 
 * Fix incorrect behavior in `Data.ByteString.Short.Base16#encodeBase16`
