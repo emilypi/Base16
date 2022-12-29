@@ -9,6 +9,7 @@ module Data.ByteString.Base16.Internal.Head
 , decodeBase16Lenient_
 , encodeBase16Short_
 , decodeBase16Short_
+, decodeBase16ShortTyped_
 , decodeBase16ShortLenient_
 ) where
 
@@ -82,13 +83,11 @@ decodeBase16Typed_ (Base16 (PS !sfp !soff !slen)) =
           q
   where
     !q = slen `quot` 2
-    !r = slen `rem` 2
 {-# INLINE decodeBase16Typed_ #-}
 
 decodeBase16Lenient_ :: ByteString -> ByteString
-decodeBase16Lenient_ (PS !sfp !soff !slen)
-  | slen == 0 = BS.empty
-  | otherwise = unsafeDupablePerformIO $ do
+decodeBase16Lenient_ (PS !sfp !soff !slen) =
+  unsafeDupablePerformIO $ do
     dfp <- mallocPlainForeignPtrBytes q
     withForeignPtr dfp $ \dptr ->
       withForeignPtr sfp $ \sptr ->
@@ -127,6 +126,16 @@ decodeBase16Short_ (SBS !ba#)
     !q = l `quot` 2
     !r = l `rem` 2
 {-# INLINE decodeBase16Short_ #-}
+
+decodeBase16ShortTyped_ :: Base16 ShortByteString -> ShortByteString
+decodeBase16ShortTyped_ (Base16 (SBS !ba#)) = runDecodeST' $ do
+    dst <- newByteArray q
+    Short.decodeLoopTyped l dst (MutableByteArray (unsafeCoerce# ba#))
+  where
+    !l = I# (sizeofByteArray# ba#)
+    !q = l `quot` 2
+{-# INLINE decodeBase16ShortTyped_ #-}
+
 
 decodeBase16ShortLenient_ :: ShortByteString -> ShortByteString
 decodeBase16ShortLenient_ (SBS !ba#)
