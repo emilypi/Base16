@@ -1,5 +1,15 @@
 # Revision history for base16
 
+## 1.0
+
+- Revamp api (see: [MIGRATION-1.0.md](MIGRATION-1.0.md) in the source repo)
+  - Add new `Base16` opaque wrapper for encoded strings
+  - Move `decode*` to `decode*Typed` for untyped bytestring values
+  - Make typed decoding the default
+  - Optimize loops in the typed case
+
+- Bump lower bound on `bytestring` to `bytestring-0.11`
+- Support for all recent GHCs
 ## 0.3.2.1
 
 * Add support for GHC 9.4

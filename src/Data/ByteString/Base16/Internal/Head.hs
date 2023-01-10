@@ -39,19 +39,19 @@ import System.IO.Unsafe
 -- | Head of the base16 encoding loop - marshal data, assemble loops
 --
 encodeBase16_ :: ByteString -> ByteString
-encodeBase16_ (PS !sfp !soff !slen) =
+encodeBase16_ (BS !sfp !slen) =
     unsafeCreate dlen $ \dptr ->
       withForeignPtr sfp $ \sptr ->
         innerLoop
           dptr
-          (plusPtr sptr soff)
-          (plusPtr sptr (soff + slen))
+          sptr
+          (plusPtr sptr slen)
   where
     dlen = 2 * slen
 {-# INLINE encodeBase16_ #-}
 
 decodeBase16_ :: ByteString -> Either Text ByteString
-decodeBase16_ (PS !sfp !soff !slen)
+decodeBase16_ (BS sfp slen)
   | slen == 0 = Right BS.empty
   | r /= 0 = Left "invalid bytestring size"
   | otherwise = unsafeDupablePerformIO $ do
@@ -61,8 +61,8 @@ decodeBase16_ (PS !sfp !soff !slen)
         decodeLoop
           dfp
           dptr
-          (plusPtr sptr soff)
-          (plusPtr sptr (soff + slen))
+          sptr
+          (plusPtr sptr slen)
           q
   where
     !q = slen `quot` 2
@@ -70,23 +70,20 @@ decodeBase16_ (PS !sfp !soff !slen)
 {-# INLINE decodeBase16_ #-}
 
 decodeBase16Typed_ :: Base16 ByteString -> ByteString
-decodeBase16Typed_ (Base16 (PS !sfp !soff !slen)) =
-  unsafeDupablePerformIO $ do
-    dfp <- mallocPlainForeignPtrBytes q
-    withForeignPtr dfp $ \dptr ->
-      withForeignPtr sfp $ \sptr ->
-        decodeLoopTyped
-          dfp
-          dptr
-          (plusPtr sptr soff)
-          (plusPtr sptr (soff + slen))
-          q
+decodeBase16Typed_ (Base16 (BS sfp slen)) =
+  unsafeCreate q $ \dptr ->
+    withForeignPtr sfp $ \sptr ->
+      decodeLoopTyped
+        dptr
+        sptr
+        (plusPtr sptr slen)
+
   where
     !q = slen `quot` 2
 {-# INLINE decodeBase16Typed_ #-}
 
 decodeBase16Lenient_ :: ByteString -> ByteString
-decodeBase16Lenient_ (PS !sfp !soff !slen) =
+decodeBase16Lenient_ (BS sfp slen) =
   unsafeDupablePerformIO $ do
     dfp <- mallocPlainForeignPtrBytes q
     withForeignPtr dfp $ \dptr ->
@@ -94,8 +91,8 @@ decodeBase16Lenient_ (PS !sfp !soff !slen) =
         lenientLoop
           dfp
           dptr
-          (plusPtr sptr soff)
-          (plusPtr sptr (soff + slen))
+          sptr
+          (plusPtr sptr slen)
           0
   where
     !q = slen `quot` 2
