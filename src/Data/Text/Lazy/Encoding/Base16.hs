@@ -16,6 +16,7 @@
 module Data.Text.Lazy.Encoding.Base16
 ( encodeBase16
 , decodeBase16
+, decodeBase16Untyped
 , decodeBase16With
 , decodeBase16Lenient
 , isBase16
@@ -23,6 +24,7 @@ module Data.Text.Lazy.Encoding.Base16
 ) where
 
 
+import Data.Base16.Types
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Base16 as B16L
@@ -31,6 +33,11 @@ import Data.Text.Encoding.Base16.Error (Base16Error(..))
 import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as TL
 
+-- $setup
+--
+-- >>> import Data.Base16.Types
+-- >>> :set -XOverloadedStrings
+--
 
 -- | Encode a lazy 'Text' value in Base16 with padding.
 --
@@ -41,7 +48,7 @@ import qualified Data.Text.Lazy.Encoding as TL
 -- >>> encodeBase16 "Sun"
 -- "53756e"
 --
-encodeBase16 :: Text -> Text
+encodeBase16 :: Text -> Base16 Text
 encodeBase16 = B16L.encodeBase16 . TL.encodeUtf8
 {-# INLINE encodeBase16 #-}
 
@@ -51,17 +58,30 @@ encodeBase16 = B16L.encodeBase16 . TL.encodeUtf8
 --
 -- === __Examples__:
 --
--- >>> decodeBase16 "53756e"
--- Right "Sun"
+-- >>> decodeBase16 $ assertBase16 "53756e"
+-- "Sun"
 --
--- >>> decodeBase16 "6x"
--- Left "invalid character at offset: 1"
---
-decodeBase16 :: Text -> Either T.Text Text
-decodeBase16 = fmap TL.decodeLatin1 . B16L.decodeBase16 . TL.encodeUtf8
+decodeBase16 :: Base16 Text -> Text
+decodeBase16 = TL.decodeLatin1 . B16L.decodeBase16 . fmap TL.encodeUtf8
 {-# INLINE decodeBase16 #-}
 
--- | Attempt to decode a lazy 'Text' value as Base16, converting from
+-- | Decode an untyped Base16-encoded lazy 'Text' value.
+--
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16Untyped "53756e"
+-- Right "Sun"
+--
+-- >>> decodeBase16Untyped "6x"
+-- Left "invalid character at offset: 1"
+--
+decodeBase16Untyped :: Text -> Either T.Text Text
+decodeBase16Untyped = fmap TL.decodeLatin1 . B16L.decodeBase16Untyped . TL.encodeUtf8
+{-# INLINE decodeBase16Untyped #-}
+
+-- | Attempt to decode an untyped lazy 'Text' value as Base16, converting from
 -- 'ByteString' to 'Text' according to some encoding function. In practice,
 -- This is something like 'decodeUtf8'', which may produce an error.
 --
@@ -80,9 +100,9 @@ decodeBase16With
     -> ByteString
       -- ^ Input to decode
     -> Either (Base16Error err) Text
-decodeBase16With f t = case B16L.decodeBase16 t of
-  Left de -> Left $ DecodeError de
-  Right a -> first ConversionError (f a)
+decodeBase16With f t = case B16L.decodeBase16Untyped t of
+    Left de -> Left $ DecodeError de
+    Right a -> first ConversionError $ f a
 {-# INLINE decodeBase16With #-}
 
 -- | Decode a Base16-encoded lazy 'Text' value leniently, using a

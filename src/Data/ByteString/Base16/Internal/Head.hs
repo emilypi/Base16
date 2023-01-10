@@ -43,11 +43,11 @@ encodeBase16_ (PS !sfp !soff !slen) =
     unsafeCreate dlen $ \dptr ->
       withForeignPtr sfp $ \sptr ->
         innerLoop
-          (castPtr dptr)
-          (castPtr (plusPtr sptr soff))
+          dptr
+          (plusPtr sptr soff)
           (plusPtr sptr (soff + slen))
   where
-    !dlen = 2 * slen
+    dlen = 2 * slen
 {-# INLINE encodeBase16_ #-}
 
 decodeBase16_ :: ByteString -> Either Text ByteString

@@ -16,6 +16,7 @@
 module Data.Text.Short.Encoding.Base16
 ( encodeBase16
 , decodeBase16
+, decodeBase16Untyped
 , decodeBase16With
 , decodeBase16Lenient
 , isBase16
@@ -23,6 +24,7 @@ module Data.Text.Short.Encoding.Base16
 ) where
 
 
+import Data.Base16.Types
 import Data.Bifunctor (first)
 import qualified Data.ByteString.Base16 as B16
 import Data.ByteString.Short
@@ -32,6 +34,11 @@ import Data.Text.Encoding.Base16.Error
 import Data.Text.Short
 import Data.Text.Short.Unsafe
 
+-- $setup
+--
+-- >>> import Data.Base16.Types
+-- >>> :set -XOverloadedStrings
+--
 
 -- | Encode a 'ShortText' value in Base16 with padding.
 --
@@ -42,9 +49,10 @@ import Data.Text.Short.Unsafe
 -- >>> encodeBase16 "Sun"
 -- "53756e"
 --
-encodeBase16 :: ShortText -> ShortText
+encodeBase16 :: ShortText -> Base16 ShortText
 encodeBase16 = BS16.encodeBase16 . toShortByteString
 {-# INLINE encodeBase16 #-}
+
 
 -- | Decode a Base16-encoded 'ShortText' value.
 --
@@ -52,19 +60,34 @@ encodeBase16 = BS16.encodeBase16 . toShortByteString
 --
 -- === __Examples__:
 --
--- >>> decodeBase16 "53756e"
--- Right "Sun"
+-- >>> decodeBase16 $ assertBase16 "53756e"
+-- "Sun"
 --
--- >>> decodeBase16 "6x"
--- Left "invalid character at offset: 1"
---
-decodeBase16 :: ShortText -> Either Text ShortText
-decodeBase16 =  fmap fromShortByteStringUnsafe
+decodeBase16 :: Base16 ShortText -> ShortText
+decodeBase16 =  fromShortByteStringUnsafe
   . BS16.decodeBase16
-  . toShortByteString
+  . fmap toShortByteString
 {-# INLINE decodeBase16 #-}
 
--- | Attempt to decode a 'ShortText' value as Base16, converting from
+-- | Decode an untyped Base16-encoded 'ShortText' value.
+--
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16Untyped "53756e"
+-- Right "Sun"
+--
+-- >>> decodeBase16Untyped "6x"
+-- Left "invalid character at offset: 1"
+--
+decodeBase16Untyped :: ShortText -> Either Text ShortText
+decodeBase16Untyped =  fmap fromShortByteStringUnsafe
+  . BS16.decodeBase16Untyped
+  . toShortByteString
+{-# INLINE decodeBase16Untyped #-}
+
+-- | Attempt to decode an untyped 'ShortText' value as Base16, converting from
 -- 'ByteString' to 'ShortText' according to some encoding function. In practice,
 -- This is something like 'decodeUtf8'', which may produce an error.
 --
@@ -85,12 +108,12 @@ decodeBase16With
     -> ShortByteString
       -- ^ Input to decode
     -> Either (Base16Error err) ShortText
-decodeBase16With f t = case BS16.decodeBase16 t of
-  Left de -> Left $ DecodeError de
-  Right a -> first ConversionError (f a)
+decodeBase16With f t = case BS16.decodeBase16Untyped t of
+    Left de -> Left $ DecodeError de
+    Right a -> first ConversionError $ f a
 {-# INLINE decodeBase16With #-}
 
--- | Decode a Base16-encoded 'ShortText' value leniently, using a
+-- | Decode an untyped Base16-encoded 'ShortText' value leniently, using a
 -- strategy that never fails, catching unicode exceptions raised in the
 -- process of converting to text values.
 --

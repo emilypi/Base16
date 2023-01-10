@@ -2,7 +2,7 @@
 {-# LANGUAGE Trustworthy #-}
 -- |
 -- Module       : Data.ByteString.Base16
--- Copyright    : (c) 2020 Emily Pillmore
+-- Copyright    : (c) 2020-2022 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -19,6 +19,7 @@ module Data.ByteString.Base16
 , encodeBase16'
 , decodeBase16
 , decodeBase16'
+, decodeBase16Untyped
 , decodeBase16Lenient
 , isBase16
 , isValidBase16
@@ -27,12 +28,18 @@ module Data.ByteString.Base16
 
 import Prelude hiding (all, elem)
 
+import Data.Base16.Types
 import Data.ByteString (ByteString, all, elem)
 import Data.ByteString.Base16.Internal.Head
 import Data.Either
 import Data.Text (Text)
 import qualified Data.Text.Encoding as T
 
+-- $setup
+--
+-- >>> import Data.Base16.Types
+-- >>> :set -XOverloadedStrings
+--
 
 -- | Encode a 'ByteString' value as Base16 'Text' with padding.
 --
@@ -43,8 +50,8 @@ import qualified Data.Text.Encoding as T
 -- >>> encodeBase16 "Sun"
 -- "53756e"
 --
-encodeBase16 :: ByteString -> Text
-encodeBase16 = T.decodeUtf8 . encodeBase16'
+encodeBase16 :: ByteString -> Base16 Text
+encodeBase16 = fmap T.decodeUtf8 . encodeBase16'
 {-# INLINE encodeBase16 #-}
 
 -- | Encode a 'ByteString' value as a Base16 'ByteString'  value with padding.
@@ -56,8 +63,8 @@ encodeBase16 = T.decodeUtf8 . encodeBase16'
 -- >>> encodeBase16' "Sun"
 -- "53756e"
 --
-encodeBase16' :: ByteString -> ByteString
-encodeBase16' = encodeBase16_
+encodeBase16' :: ByteString -> Base16 ByteString
+encodeBase16' = assertBase16 . encodeBase16_
 {-# INLINE encodeBase16' #-}
 
 -- | Decode a Base16-encoded 'ByteString' value.
@@ -66,14 +73,11 @@ encodeBase16' = encodeBase16_
 --
 -- === __Examples__:
 --
--- >>> decodeBase16 "53756e"
--- Right "Sun"
+-- >>> decodeBase16 $ assertBase16 "53756e"
+-- "Sun"
 --
--- >>> decodeBase16 "6x"
--- Left "invalid character at offset: 1"
---
-decodeBase16 :: ByteString -> Either Text ByteString
-decodeBase16 = decodeBase16_
+decodeBase16 :: Base16 ByteString -> ByteString
+decodeBase16 = decodeBase16Typed_
 {-# INLINE decodeBase16 #-}
 
 -- | Decode Base16 'Text'.
@@ -82,15 +86,28 @@ decodeBase16 = decodeBase16_
 --
 -- === __Examples__:
 --
--- >>> decodeBase16' "53756e"
+-- >>> decodeBase16' $ assertBase16 "53756e"
+-- "Sun"
+--
+decodeBase16' :: Base16 Text -> ByteString
+decodeBase16' = decodeBase16Typed_ . fmap T.encodeUtf8
+{-# INLINE decodeBase16' #-}
+
+-- | Decode an untyped Base16-encoded 'ByteString' value with error-checking.
+--
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16Untyped "53756e"
 -- Right "Sun"
 --
--- >>> decodeBase16' "6x"
+-- >>> decodeBase16Untyped "6x"
 -- Left "invalid character at offset: 1"
 --
-decodeBase16' :: Text -> Either Text ByteString
-decodeBase16' = decodeBase16 . T.encodeUtf8
-{-# INLINE decodeBase16' #-}
+decodeBase16Untyped :: ByteString -> Either Text ByteString
+decodeBase16Untyped = decodeBase16_
+{-# INLINE decodeBase16Untyped #-}
 
 -- | Decode a Base16-encoded 'ByteString' value leniently, using a
 -- strategy that never fails
@@ -120,7 +137,7 @@ decodeBase16Lenient = decodeBase16Lenient_
 -- True
 --
 isBase16 :: ByteString -> Bool
-isBase16 bs = isValidBase16 bs && isRight (decodeBase16 bs)
+isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
 {-# INLINE isBase16 #-}
 
 -- | Tell whether a 'ByteString' value is a valid Base16 format.
@@ -138,5 +155,5 @@ isBase16 bs = isValidBase16 bs && isRight (decodeBase16 bs)
 -- True
 --
 isValidBase16 :: ByteString -> Bool
-isValidBase16 = all (flip elem "0123456789abcdefABCDEF")
+isValidBase16 = all (`elem` "0123456789abcdefABCDEF")
 {-# INLINE isValidBase16 #-}

@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Trustworthy #-}
 -- |
 -- Module       : Data.ByteString.Short.Base16
@@ -19,12 +18,14 @@ module Data.ByteString.Short.Base16
 , encodeBase16'
 , decodeBase16
 , decodeBase16'
+, decodeBase16Untyped
 , decodeBase16Lenient
 , isBase16
 , isValidBase16
 ) where
 
 
+import Data.Base16.Types
 import Data.ByteString.Short
 import Data.ByteString.Base16.Internal.Head
 import qualified Data.ByteString.Base16 as B16
@@ -32,6 +33,11 @@ import Data.Text (Text)
 import Data.Text.Short
 import Data.Text.Short.Unsafe
 
+-- $setup
+--
+-- >>> import Data.Base16.Types
+-- >>> :set -XOverloadedStrings
+--
 
 -- | Encode a 'ShortByteString' value as Base16 'ShortText' with padding.
 --
@@ -44,8 +50,8 @@ import Data.Text.Short.Unsafe
 --
 -- @since 0.3.0.0
 --
-encodeBase16 :: ShortByteString -> ShortText
-encodeBase16 = fromShortByteStringUnsafe . encodeBase16'
+encodeBase16 :: ShortByteString -> Base16 ShortText
+encodeBase16 = fmap fromShortByteStringUnsafe . encodeBase16'
 {-# INLINE encodeBase16 #-}
 
 -- | Encode a 'ShortByteString' value as a Base16 'ShortByteString'  value with padding.
@@ -57,8 +63,8 @@ encodeBase16 = fromShortByteStringUnsafe . encodeBase16'
 -- >>> encodeBase16' "Sun"
 -- "53756e"
 --
-encodeBase16' :: ShortByteString -> ShortByteString
-encodeBase16' = encodeBase16Short_
+encodeBase16' :: ShortByteString -> Base16 ShortByteString
+encodeBase16' = assertBase16 . encodeBase16Short_
 {-# INLINE encodeBase16' #-}
 
 -- | Decode a Base16-encoded 'ShortByteString' value.
@@ -67,31 +73,41 @@ encodeBase16' = encodeBase16Short_
 --
 -- === __Examples__:
 --
--- >>> decodeBase16 "53756e"
--- Right "Sun"
+-- >>> decodeBase16 $ assertBase16 "53756e"
+-- "Sun"
 --
--- >>> decodeBase16 "6x"
--- Left "invalid character at offset: 1"
---
-decodeBase16 :: ShortByteString -> Either Text ShortByteString
-decodeBase16 = decodeBase16Short_
+decodeBase16 :: Base16 ShortByteString -> ShortByteString
+decodeBase16 = decodeBase16ShortTyped_
 {-# INLINE decodeBase16 #-}
 
--- | Decode Base16 'Text'.
+-- | Decode Base16-encoded 'ShortText' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 -- === __Examples__:
 --
--- >>> decodeBase16' "53756e"
+-- >>> decodeBase16' $ assertBase16 "53756e"
+-- "Sun"
+--
+decodeBase16' :: Base16 ShortText -> ShortByteString
+decodeBase16' = decodeBase16 . fmap toShortByteString
+{-# INLINE decodeBase16' #-}
+
+-- | Decode an untyped Base16-encoded 'ByteString' value with error-checking.
+--
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16Untyped "53756e"
 -- Right "Sun"
 --
--- >>> decodeBase16' "6x"
+-- >>> decodeBase16Untyped "6x"
 -- Left "invalid character at offset: 1"
 --
-decodeBase16' :: ShortText -> Either Text ShortByteString
-decodeBase16' = decodeBase16 . toShortByteString
-{-# INLINE decodeBase16' #-}
+decodeBase16Untyped :: ShortByteString -> Either Text ShortByteString
+decodeBase16Untyped = decodeBase16Short_
+{-# INLINE decodeBase16Untyped #-}
 
 -- | Decode a Base16-encoded 'ShortByteString' value leniently, using a
 -- strategy that never fails

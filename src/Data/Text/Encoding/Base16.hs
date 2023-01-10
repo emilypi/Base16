@@ -16,6 +16,7 @@
 module Data.Text.Encoding.Base16
 ( encodeBase16
 , decodeBase16
+, decodeBase16Untyped
 , decodeBase16With
 , decodeBase16Lenient
 , isBase16
@@ -23,14 +24,19 @@ module Data.Text.Encoding.Base16
 ) where
 
 
+import Data.Base16.Types
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as B16
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Text.Encoding.Base16.Error (Base16Error(..))
 import qualified Data.Text.Encoding as T
 
+-- $setup
+--
+-- >>> import Data.Base16.Types
+-- >>> :set -XOverloadedStrings
+--
 
 -- | Encode a 'Text' value in Base16 with padding.
 --
@@ -41,7 +47,7 @@ import qualified Data.Text.Encoding as T
 -- >>> encodeBase16 "Sun"
 -- "53756e"
 --
-encodeBase16 :: Text -> Text
+encodeBase16 :: Text -> Base16 Text
 encodeBase16 = B16.encodeBase16 . T.encodeUtf8
 {-# INLINE encodeBase16 #-}
 
@@ -51,17 +57,30 @@ encodeBase16 = B16.encodeBase16 . T.encodeUtf8
 --
 -- === __Examples__:
 --
--- >>> decodeBase16 "53756e"
--- Right "Sun"
+-- >>> decodeBase16 $ assertBase16 "53756e"
+-- "Sun"
 --
--- >>> decodeBase16 "6x"
--- Left "invalid character at offset: 1"
---
-decodeBase16 :: Text -> Either T.Text Text
-decodeBase16 = fmap T.decodeLatin1 . B16.decodeBase16 . T.encodeUtf8
+decodeBase16 :: Base16 Text -> Text
+decodeBase16 = T.decodeLatin1 . B16.decodeBase16 . fmap T.encodeUtf8
 {-# INLINE decodeBase16 #-}
 
--- | Attempt to decode a 'Text' value as Base16, converting from
+-- | Decode an untyped Base16-encoded 'Text' value.
+--
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16Untyped "53756e"
+-- Right "Sun"
+--
+-- >>> decodeBase16Untyped "6x"
+-- Left "invalid character at offset: 1"
+--
+decodeBase16Untyped :: Text -> Either Text Text
+decodeBase16Untyped = fmap T.decodeLatin1 . B16.decodeBase16Untyped . T.encodeUtf8
+{-# INLINE decodeBase16Untyped #-}
+
+-- | Attempt to decode an untyped 'Text' value as Base16, converting from
 -- 'ByteString' to 'Text' according to some encoding function. In practice,
 -- This is something like 'decodeUtf8'', which may produce an error.
 --
@@ -82,12 +101,12 @@ decodeBase16With
     -> ByteString
       -- ^ Input to decode
     -> Either (Base16Error err) Text
-decodeBase16With f t = case B16.decodeBase16 t of
-  Left de -> Left $ DecodeError de
-  Right a -> first ConversionError (f a)
+decodeBase16With f t = case B16.decodeBase16Untyped t of
+    Left de -> Left $ DecodeError de
+    Right a -> first ConversionError (f a)
 {-# INLINE decodeBase16With #-}
 
--- | Decode a Base16-encoded 'Text' value leniently, using a
+-- | Decode an untyped Base16-encoded 'Text' value leniently, using a
 -- strategy that never fails, catching unicode exceptions raised in the
 -- process of converting to text values.
 --

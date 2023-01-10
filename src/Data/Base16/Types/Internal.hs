@@ -18,6 +18,7 @@ module Data.Base16.Types.Internal
 
 import Control.DeepSeq
 
+import Data.Functor.Classes
 
 -- | Wraps a value, asserting that it is or is intended to be
 -- in a particular kind of Base16 encoding use 'extractBase16'
@@ -25,6 +26,18 @@ import Control.DeepSeq
 -- as base16-encoded
 --
 newtype Base16 a = Base16 a
+
+instance Eq a => Eq (Base16 a) where
+  Base16 a == Base16 b = a == b
+
+instance Eq1 Base16 where
+  liftEq f (Base16 a) (Base16 b) = f a b
+
+instance Ord a => Ord (Base16 a) where
+  compare (Base16 a) (Base16 b) = compare a b
+
+instance Ord1 Base16 where
+  liftCompare f (Base16 a) (Base16 b) = f a b
 
 instance Functor Base16 where
   fmap f (Base16 a) = Base16 (f a)

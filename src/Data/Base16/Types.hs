@@ -30,8 +30,7 @@ import Data.Base16.Types.Internal (Base16(..))
 -- sure of the provenance of the value, you may experience
 -- odd behavior when attempting to decode. Use at your own
 -- risk. If I see any issues logged on this project from
--- negligent use of this or 'coerceBase16', Sofia and I will
--- smite you.
+-- negligent use of this, Sofia and I will smite you.
 --
 assertBase16 :: a -> Base16 a
 assertBase16 = Base16
