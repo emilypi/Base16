@@ -1,7 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE PackageImports #-}
@@ -20,6 +18,7 @@
 module Internal where
 
 
+import Data.Base16.Types
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as LBS
@@ -84,7 +83,8 @@ class
   where
 
   label :: String
-  encode :: bs -> bs
+  encode :: bs -> Base16 bs
+  decodeTyped :: Base16 bs -> bs
   decode :: bs -> Either Text bs
   lenient :: bs -> bs
 
@@ -97,7 +97,8 @@ instance Harness 'B16 BS.ByteString where
   label = "ByteString"
 
   encode = B16.encodeBase16'
-  decode = B16.decodeBase16
+  decodeTyped = B16.decodeBase16
+  decode = B16.decodeBase16Untyped
   lenient = B16.decodeBase16Lenient
   correct = B16.isBase16
   validate = B16.isValidBase16
@@ -107,7 +108,8 @@ instance Harness 'LB16 LBS.ByteString where
   label = "Lazy ByteString"
 
   encode = LB16.encodeBase16'
-  decode = LB16.decodeBase16
+  decodeTyped = LB16.decodeBase16
+  decode = LB16.decodeBase16Untyped
   lenient = LB16.decodeBase16Lenient
   correct = LB16.isBase16
   validate = LB16.isValidBase16
@@ -117,7 +119,8 @@ instance Harness 'SB16 SBS.ShortByteString where
   label = "Short ByteString"
 
   encode = SB16.encodeBase16'
-  decode = SB16.decodeBase16
+  decodeTyped = SB16.decodeBase16
+  decode = SB16.decodeBase16Untyped
   lenient = SB16.decodeBase16Lenient
   correct = SB16.isBase16
   validate = SB16.isValidBase16
@@ -127,7 +130,8 @@ instance Harness 'T16 Text where
   label = "Text"
 
   encode = T16.encodeBase16
-  decode = T16.decodeBase16
+  decodeTyped = T16.decodeBase16
+  decode = T16.decodeBase16Untyped
   lenient = T16.decodeBase16Lenient
   correct = T16.isBase16
   validate = T16.isValidBase16
@@ -137,7 +141,8 @@ instance Harness 'TL16 TL.Text where
   label = "Lazy Text"
 
   encode = TL16.encodeBase16
-  decode = TL16.decodeBase16
+  decodeTyped = TL16.decodeBase16
+  decode = TL16.decodeBase16Untyped
   lenient = TL16.decodeBase16Lenient
   correct = TL16.isBase16
   validate = TL16.isValidBase16
@@ -147,7 +152,8 @@ instance Harness 'TS16 TS.ShortText where
   label = "Short Text"
 
   encode = TS16.encodeBase16
-  decode = TS16.decodeBase16
+  decodeTyped = TS16.decodeBase16
+  decode = TS16.decodeBase16Untyped
   lenient = TS16.decodeBase16Lenient
   correct = TS16.isBase16
   validate = TS16.isValidBase16
@@ -207,7 +213,7 @@ instance CoArbitrary TL.Text where
 
 instance Arbitrary TS.ShortText where
   arbitrary = TS.fromText <$> arbitrary
-  shrink xs = fmap TS.fromText $ shrink (TS.toText xs)
+  shrink xs = TS.fromText <$> shrink (TS.toText xs)
 
 instance CoArbitrary TS.ShortText where
   coarbitrary = coarbitrary . TS.toText

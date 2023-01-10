@@ -19,6 +19,7 @@ module Data.ByteString.Lazy.Base16
 , encodeBase16'
 , decodeBase16
 , decodeBase16'
+, decodeBase16Untyped
 , decodeBase16Lenient
 , isBase16
 , isValidBase16
@@ -28,6 +29,7 @@ module Data.ByteString.Lazy.Base16
 
 import Prelude hiding (all, elem)
 
+import Data.Base16.Types
 import qualified Data.ByteString as B
 import Data.ByteString.Lazy (all, elem, fromChunks, toChunks)
 import Data.ByteString.Lazy.Internal (ByteString(..))
@@ -38,6 +40,11 @@ import Data.Text.Lazy (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
 
+-- $setup
+--
+-- >>> import Data.Base16.Types
+-- >>> :set -XOverloadedStrings
+--
 
 -- | Encode a lazy 'ByteString' value as Base16 'Text' with padding.
 --
@@ -48,8 +55,8 @@ import qualified Data.Text.Lazy.Encoding as TL
 -- >>> encodeBase16 "Sun"
 -- "53756e"
 --
-encodeBase16 :: ByteString -> Text
-encodeBase16 = TL.decodeUtf8 . encodeBase16'
+encodeBase16 :: ByteString -> Base16 Text
+encodeBase16 = fmap TL.decodeUtf8 . encodeBase16'
 {-# INLINE encodeBase16 #-}
 
 -- | Encode a lazy 'ByteString' value as a Base16 'ByteString'  value with padding.
@@ -61,9 +68,10 @@ encodeBase16 = TL.decodeUtf8 . encodeBase16'
 -- >>> encodeBase16' "Sun"
 -- "53756e"
 --
-encodeBase16' :: ByteString -> ByteString
-encodeBase16' Empty = Empty
-encodeBase16' (Chunk b bs) = Chunk (B16.encodeBase16_ b) (encodeBase16' bs)
+encodeBase16' :: ByteString -> Base16 ByteString
+encodeBase16' bs = assertBase16 $ case bs of
+    Empty -> Empty
+    Chunk b bs' -> Chunk (B16.encodeBase16_ b) (extractBase16 $ encodeBase16' bs')
 {-# INLINE encodeBase16' #-}
 
 -- | Decode a padded Base16-encoded lazy 'ByteString' value.
@@ -72,15 +80,15 @@ encodeBase16' (Chunk b bs) = Chunk (B16.encodeBase16_ b) (encodeBase16' bs)
 --
 -- === __Examples__:
 --
--- >>> decodeBase16 "53756e"
--- Right "Sun"
+-- >>> decodeBase16 $ assertBase16 "53756e"
+-- "Sun"
 --
--- >>> decodeBase16 "6x"
--- Left "invalid character at offset: 1"
---
-decodeBase16 :: ByteString -> Either T.Text ByteString
-decodeBase16 Empty = Right Empty
-decodeBase16 (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase16 bs
+decodeBase16 :: Base16 ByteString -> ByteString
+decodeBase16 bs = case extractBase16 bs of
+    Empty -> Empty
+    Chunk b bs' -> Chunk
+      (B16.decodeBase16Typed_ (assertBase16 b))
+      (decodeBase16 $ assertBase16 bs')
 {-# INLINE decodeBase16 #-}
 
 -- | Decode Base16 'Text'.
@@ -89,15 +97,30 @@ decodeBase16 (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase16 bs
 --
 -- === __Examples__:
 --
--- >>> decodeBase16' "53756e"
+-- >>> decodeBase16' $ assertBase16 "53756e"
+-- "Sun"
+--
+decodeBase16' :: Base16 Text -> ByteString
+decodeBase16' = decodeBase16 . fmap TL.encodeUtf8
+{-# INLINE decodeBase16' #-}
+
+-- | Decode an untyped Base16-encoded lazy 'ByteString' value.
+--
+-- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
+--
+-- === __Examples__:
+--
+-- >>> decodeBase16Untyped "53756e"
 -- Right "Sun"
 --
--- >>> decodeBase16' "6x"
+-- >>> decodeBase16Untyped "6x"
 -- Left "invalid character at offset: 1"
 --
-decodeBase16' :: Text -> Either T.Text ByteString
-decodeBase16' = decodeBase16 . TL.encodeUtf8
-{-# INLINE decodeBase16' #-}
+decodeBase16Untyped :: ByteString -> Either T.Text ByteString
+decodeBase16Untyped Empty = Right Empty
+decodeBase16Untyped (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase16Untyped bs
+{-# INLINE decodeBase16Untyped #-}
+
 
 -- | Decode a Base16-encoded 'ByteString' value leniently, using a
 -- strategy that never fails
@@ -131,7 +154,7 @@ decodeBase16Lenient = fromChunks
 -- True
 --
 isBase16 :: ByteString -> Bool
-isBase16 bs = isValidBase16 bs && isRight (decodeBase16 bs)
+isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
 {-# INLINE isBase16 #-}
 
 -- | Tell whether a lazy 'ByteString' value is a valid Base16 format.
@@ -149,5 +172,5 @@ isBase16 bs = isValidBase16 bs && isRight (decodeBase16 bs)
 -- True
 --
 isValidBase16 :: ByteString -> Bool
-isValidBase16 = all (flip elem "0123456789abcdefABCDEF")
+isValidBase16 = all (`elem` "0123456789abcdefABCDEF")
 {-# INLINE isValidBase16 #-}

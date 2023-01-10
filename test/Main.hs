@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
@@ -21,6 +20,7 @@ module Main
 ) where
 
 
+import Data.Base16.Types
 import Data.Bifunctor (second)
 import qualified Data.ByteString as BS
 import Data.ByteString.Internal (c2w)
@@ -109,7 +109,7 @@ mkTests context ts = testGroup context . (<*>) ts . pure
 mkPropTree :: forall a b proxy. Harness a b => proxy a -> TestTree
 mkPropTree = mkTests "Property Tests"
   [ prop_roundtrip
-  , prop_correctness
+  , prop_untyped_correctness
   , const prop_bos_coherence
   ]
 
@@ -146,18 +146,21 @@ mkDecodeTree utf8 t = mkTests "Decoding tests"
 
 prop_roundtrip :: forall a b proxy. Harness a b => proxy a -> TestTree
 prop_roundtrip _ = testGroup "prop_roundtrip"
-  [ testProperty "prop_std_roundtrip" $ \(bs :: b) ->
-      Right (encode bs) == decode (encode (encode bs))
+  [ testProperty "prop_std_roundtrip_typed" $ \(bs :: b) ->
+      encode bs == fmap decodeTyped (encode <$> encode bs)
+  , testProperty "prop_std_roundtrip_untyped" $ \(bs :: b) ->
+      Right (extractBase16 $ encode bs)
+        == extractBase16 (decode <$> extractBase16 (encode <$> encode bs))
   , testProperty "prop_std_lenient_roundtrip" $ \(bs :: b) ->
-      encode bs == lenient (encode (encode bs))
+      extractBase16 (encode bs) == lenient (extractBase16 . extractBase16 $ encode <$> encode bs)
   ]
 
-prop_correctness :: forall a b proxy. Harness a b => proxy a -> TestTree
-prop_correctness _ = testGroup "prop_validity"
+prop_untyped_correctness :: forall a b proxy. Harness a b => proxy a -> TestTree
+prop_untyped_correctness _ = testGroup "prop_validity"
   [ testProperty "prop_std_valid" $ \(bs :: b) ->
-    validate (encode bs)
+    validate (extractBase16 $ encode bs)
   , testProperty "prop_std_correct" $ \(bs :: b) ->
-    correct (encode bs)
+    correct (extractBase16 $ encode bs)
   ]
 
 -- | just a sanity check against `base16-bytestring`
@@ -165,8 +168,9 @@ prop_correctness _ = testGroup "prop_validity"
 prop_bos_coherence :: TestTree
 prop_bos_coherence = testGroup "prop_bos_coherence"
   [ testProperty "prop_std_bos_coherence" $ \bs ->
-      Right bs == B16.decodeBase16 (B16.encodeBase16' bs)
+      Right bs == B16.decodeBase16Untyped (extractBase16 $ B16.encodeBase16' bs)
       && Right bs == Bos.decode (Bos.encode bs)
+      && bs == B16.decodeBase16 (B16.encodeBase16' bs)
   ]
 
 -- ---------------------------------------------------------------- --
@@ -205,11 +209,15 @@ rfcVectors _ = testGroup "RFC 4648 Test Vectors"
   where
     testCaseB16 s t =
       testCaseSteps (show $ if s == "" then "empty" else s) $ \step -> do
+
         step "encode is sound"
-        lower t @=? encode @a s
+        lower t @=? extractBase16 (encode @a s)
 
         step "decode is sound"
-        Right s @=? decode (encode s)
+        s @=? decodeTyped (assertBase16 t)
+
+        step "decodeUntyped is sound"
+        Right s @=? decode (extractBase16 $ encode s)
 
 -- | Unit test trees for the `decode*With` family of text-valued functions
 --
@@ -233,7 +241,7 @@ decodeWithVectors utf8 _ _ = testGroup "DecodeWith* unit tests"
         Left (DecodeError _) -> return ()
         _ -> assertFailure "decoding phase"
     , testCase "decodeWith valid utf8 inputs on decodeUtf8" $ do
-      case decodeWith_ @a utf8 (encode @t "\1079743") of
+      case decodeWith_ @a utf8 (extractBase16 $ encode @t "\1079743") of
         Left (ConversionError _) -> return ()
         _ -> assertFailure "conversion phase"
     ]
@@ -258,7 +266,7 @@ lenientTests _ = testGroup "Lenient Tests"
   where
     testCaseB16 s t =
       testCaseSteps (show $ if s == "" then "empty" else s) $ \step -> do
-        let t0 = decode (encode @a s)
+        let t0 = decode (extractBase16 $ encode @a s)
             t1 = lenient @a t
 
         step "compare decoding"

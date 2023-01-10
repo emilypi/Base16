@@ -7,6 +7,7 @@ module Main
 import Criterion
 import Criterion.Main
 
+import Data.Base16.Types
 import Data.ByteString
 import Data.ByteString.Short
 import "base16" Data.ByteString.Base16 as B16
@@ -55,32 +56,32 @@ main =
       bgroup "decode"
       [ bgroup "25"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs25L
-        , bench "base16-bytestring" $ whnf Bos.decode bs25
+        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs25
         , bench "base16" $ whnf B16.decodeBase16 bs25
         ]
       , bgroup "100"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs100L
-        , bench "base16-bytestring" $ whnf Bos.decode bs100
+        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs100
         , bench "base16" $ whnf B16.decodeBase16 bs100
         ]
       , bgroup "1k"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs1kL
-        , bench "base16-bytestring" $ whnf Bos.decode bs1k
+        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs1k
         , bench "base16" $ whnf B16.decodeBase16 bs1k
         ]
       , bgroup "10k"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs10kL
-        , bench "base16-bytestring" $ whnf Bos.decode bs10k
+        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs10k
         , bench "base16" $ whnf B16.decodeBase16 bs10k
         ]
       , bgroup "100k"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs100kL
-        , bench "base16-bytestring" $ whnf Bos.decode bs100k
+        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs100k
         , bench "base16" $ whnf B16.decodeBase16 bs100k
         ]
       , bgroup "1mm"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs1mmL
-        , bench "base16-bytestring" $ whnf Bos.decode bs1mm
+        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs1mm
         , bench "base16" $ whnf B16.decodeBase16 bs1mm
         ]
       ]
@@ -96,10 +97,11 @@ main =
       return ((a,b,c,d,e,f),(toShort a,toShort b,toShort c,toShort d,toShort e,toShort f))
 
     bs' = do
+      let k = fmap toShort
       a <- B16.encodeBase16' <$> random 25
       b <- B16.encodeBase16' <$> random 100
       c <- B16.encodeBase16' <$> random 1000
       d <- B16.encodeBase16' <$> random 10000
       e <- B16.encodeBase16' <$> random 100000
       f <- B16.encodeBase16' <$> random 1000000
-      return ((a,b,c,d,e,f),(toShort a,toShort b,toShort c,toShort d,toShort e,toShort f))
+      return ((a,b,c,d,e,f),(k a,k b,k c,k d,k e,k f))
