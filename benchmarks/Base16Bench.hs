@@ -67,7 +67,7 @@ main =
         , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs100
         ]
       , bgroup "1k"
-        [ bench "base16-short" $ whnf BS16.decodeBase16 bs1k
+        [ bench "base16-short" $ whnf BS16.decodeBase16 bs1kL
         , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs1k
         , bench "base16" $ whnf B16.decodeBase16 bs1k
         , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs1k

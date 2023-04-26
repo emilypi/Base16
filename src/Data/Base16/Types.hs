@@ -34,8 +34,10 @@ import Data.Base16.Types.Internal (Base16(..))
 --
 assertBase16 :: a -> Base16 a
 assertBase16 = Base16
+{-# inline assertBase16 #-}
 
 -- | Forget that a particular value is Base16-encoded
 --
 extractBase16 :: Base16 a -> a
 extractBase16 (Base16 a) = a
+{-# inline extractBase16 #-}

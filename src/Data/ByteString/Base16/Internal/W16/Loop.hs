@@ -56,7 +56,6 @@ innerLoop !dptr !sptr !end = go dptr sptr
         poke (plusPtr dst 1) (aix (t .&. 0x0f) hex)
 
         go (plusPtr dst 2) (plusPtr src 1)
-{-# INLINE innerLoop #-}
 
 -- | Hex decoding loop optimized for 16-bit architectures
 --

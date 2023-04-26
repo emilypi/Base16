@@ -41,13 +41,13 @@ import System.IO.Unsafe
 encodeBase16_ :: ByteString -> ByteString
 encodeBase16_ (PS sfp soff slen) =
     unsafeCreate dlen $ \dptr ->
-      withForeignPtr sfp $ \sptr ->
+      withForeignPtr sfp $ \sptr -> do
         innerLoop
           dptr
           (plusPtr sptr soff)
           (plusPtr sptr $ slen + soff)
   where
-    dlen = 2 * slen
+    !dlen = 2 * slen
 {-# INLINE encodeBase16_ #-}
 
 decodeBase16_ :: ByteString -> Either Text ByteString
