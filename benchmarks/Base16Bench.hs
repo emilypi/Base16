@@ -58,31 +58,37 @@ main =
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs25L
         , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs25
         , bench "base16" $ whnf B16.decodeBase16 bs25
+        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs25
         ]
       , bgroup "100"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs100L
         , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs100
         , bench "base16" $ whnf B16.decodeBase16 bs100
+        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs100
         ]
       , bgroup "1k"
-        [ bench "base16-short" $ whnf BS16.decodeBase16 bs1kL
+        [ bench "base16-short" $ whnf BS16.decodeBase16 bs1k
         , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs1k
         , bench "base16" $ whnf B16.decodeBase16 bs1k
+        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs1k
         ]
       , bgroup "10k"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs10kL
         , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs10k
         , bench "base16" $ whnf B16.decodeBase16 bs10k
+        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs10k
         ]
       , bgroup "100k"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs100kL
         , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs100k
         , bench "base16" $ whnf B16.decodeBase16 bs100k
+        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs100k
         ]
       , bgroup "1mm"
         [ bench "base16-short" $ whnf BS16.decodeBase16 bs1mmL
         , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs1mm
         , bench "base16" $ whnf B16.decodeBase16 bs1mm
+        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs1mm
         ]
       ]
     ]

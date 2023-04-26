@@ -147,12 +147,12 @@ mkDecodeTree utf8 t = mkTests "Decoding tests"
 prop_roundtrip :: forall a b proxy. Harness a b => proxy a -> TestTree
 prop_roundtrip _ = testGroup "prop_roundtrip"
   [ testProperty "prop_std_roundtrip_typed" $ \(bs :: b) ->
-      encode bs == fmap decodeTyped (encode <$> encode bs)
+      bs == decodeTyped (encode bs)
   , testProperty "prop_std_roundtrip_untyped" $ \(bs :: b) ->
-      Right (extractBase16 $ encode bs)
-        == extractBase16 (decode <$> extractBase16 (encode <$> encode bs))
+      Right bs
+        == decode (extractBase16 $ encode bs)
   , testProperty "prop_std_lenient_roundtrip" $ \(bs :: b) ->
-      extractBase16 (encode bs) == lenient (extractBase16 . extractBase16 $ encode <$> encode bs)
+      bs == lenient (extractBase16 $ encode bs)
   ]
 
 prop_untyped_correctness :: forall a b proxy. Harness a b => proxy a -> TestTree

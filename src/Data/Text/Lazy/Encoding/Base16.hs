@@ -62,7 +62,7 @@ encodeBase16 = B16L.encodeBase16 . TL.encodeUtf8
 -- "Sun"
 --
 decodeBase16 :: Base16 Text -> Text
-decodeBase16 = TL.decodeLatin1 . B16L.decodeBase16 . fmap TL.encodeUtf8
+decodeBase16 = TL.decodeUtf8 . B16L.decodeBase16 . fmap TL.encodeUtf8
 {-# INLINE decodeBase16 #-}
 
 -- | Decode an untyped Base16-encoded lazy 'Text' value.
@@ -78,7 +78,7 @@ decodeBase16 = TL.decodeLatin1 . B16L.decodeBase16 . fmap TL.encodeUtf8
 -- Left "invalid character at offset: 1"
 --
 decodeBase16Untyped :: Text -> Either T.Text Text
-decodeBase16Untyped = fmap TL.decodeLatin1 . B16L.decodeBase16Untyped . TL.encodeUtf8
+decodeBase16Untyped = fmap TL.decodeUtf8 . B16L.decodeBase16Untyped . TL.encodeUtf8
 {-# INLINE decodeBase16Untyped #-}
 
 -- | Attempt to decode an untyped lazy 'Text' value as Base16, converting from
@@ -123,7 +123,7 @@ decodeBase16With f t = case B16L.decodeBase16Untyped t of
 -- "f"
 --
 decodeBase16Lenient :: Text -> Text
-decodeBase16Lenient = TL.decodeLatin1 . B16L.decodeBase16Lenient . TL.encodeUtf8
+decodeBase16Lenient = TL.decodeUtf8 . B16L.decodeBase16Lenient . TL.encodeUtf8
 {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a lazy 'Text' value is Base16-encoded.

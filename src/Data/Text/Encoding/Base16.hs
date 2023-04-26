@@ -61,7 +61,7 @@ encodeBase16 = B16.encodeBase16 . T.encodeUtf8
 -- "Sun"
 --
 decodeBase16 :: Base16 Text -> Text
-decodeBase16 = T.decodeLatin1 . B16.decodeBase16 . fmap T.encodeUtf8
+decodeBase16 = T.decodeUtf8 . B16.decodeBase16 . fmap T.encodeUtf8
 {-# INLINE decodeBase16 #-}
 
 -- | Decode an untyped Base16-encoded 'Text' value.
@@ -77,7 +77,7 @@ decodeBase16 = T.decodeLatin1 . B16.decodeBase16 . fmap T.encodeUtf8
 -- Left "invalid character at offset: 1"
 --
 decodeBase16Untyped :: Text -> Either Text Text
-decodeBase16Untyped = fmap T.decodeLatin1 . B16.decodeBase16Untyped . T.encodeUtf8
+decodeBase16Untyped = fmap T.decodeUtf8 . B16.decodeBase16Untyped . T.encodeUtf8
 {-# INLINE decodeBase16Untyped #-}
 
 -- | Attempt to decode an untyped 'Text' value as Base16, converting from
@@ -121,7 +121,7 @@ decodeBase16With f t = case B16.decodeBase16Untyped t of
 -- "f"
 --
 decodeBase16Lenient :: Text -> Text
-decodeBase16Lenient = T.decodeLatin1 . B16.decodeBase16Lenient . T.encodeUtf8
+decodeBase16Lenient = T.decodeUtf8 . B16.decodeBase16Lenient . T.encodeUtf8
 {-# INLINE decodeBase16Lenient #-}
 
 -- | Tell whether a 'Text' value is Base16-encoded.

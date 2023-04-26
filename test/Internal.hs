@@ -198,12 +198,12 @@ instance CoArbitrary SBS.ShortByteString where
     coarbitrary = coarbitrary . SBS.unpack
 
 instance Arbitrary T.Text where
-    arbitrary = T.pack <$> arbitrary
-    shrink xs = T.pack <$> shrink (T.unpack xs)
+    arbitrary = T.pack . getUnicodeString <$> arbitrary
+    shrink xs = T.pack . getUnicodeString <$> shrink (UnicodeString $ T.unpack xs)
 
 instance Arbitrary TL.Text where
-    arbitrary = TL.pack <$> arbitrary
-    shrink xs = TL.pack <$> shrink (TL.unpack xs)
+    arbitrary = TL.pack . getUnicodeString <$> arbitrary
+    shrink xs = TL.pack . getUnicodeString <$> shrink (UnicodeString $ TL.unpack xs)
 
 instance CoArbitrary T.Text where
     coarbitrary = coarbitrary . T.unpack
