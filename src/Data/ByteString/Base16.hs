@@ -1,8 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Trustworthy #-}
 -- |
 -- Module       : Data.ByteString.Base16
--- Copyright    : (c) 2020-2022 Emily Pillmore
+-- Copyright    : (c) 2020-2023 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>

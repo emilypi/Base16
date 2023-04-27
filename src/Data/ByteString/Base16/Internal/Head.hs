@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Data.ByteString.Base16.Internal.Head
@@ -13,8 +12,6 @@ module Data.ByteString.Base16.Internal.Head
 , decodeBase16ShortLenient_
 ) where
 
-
-#include "MachDeps.h"
 
 import Data.Base16.Types.Internal (Base16(..))
 import qualified Data.ByteString as BS (empty)

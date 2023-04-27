@@ -1,7 +1,6 @@
-{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Text.Encoding.Base16
--- Copyright    : (c) 2020 Emily Pillmore
+-- Copyright    : (c) 2020-2023 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
