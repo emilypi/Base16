@@ -1,4 +1,3 @@
-{-# language Safe #-}
 -- |
 -- Module       : Data.ByteString.Base16.Types.Internal
 -- Copyright    : (c) 2019-2022 Emily Pillmore

@@ -45,7 +45,7 @@ import qualified Data.Text.Lazy.Encoding as TL
 -- >>> :set -XOverloadedStrings
 --
 
--- | Encode a lazy 'ByteString' value as Base16 'Text' with padding.
+-- | Encode a lazy 'ByteString' value as Base16 'Text'
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -58,7 +58,7 @@ encodeBase16 :: ByteString -> Base16 Text
 encodeBase16 = fmap TL.decodeUtf8 . encodeBase16'
 {-# INLINE encodeBase16 #-}
 
--- | Encode a lazy 'ByteString' value as a Base16 'ByteString'  value with padding.
+-- | Encode a lazy 'ByteString' value as a Base16 'ByteString' value
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -73,7 +73,7 @@ encodeBase16' bs = assertBase16 $ case bs of
     Chunk b bs' -> Chunk (B16.encodeBase16_ b) (extractBase16 $ encodeBase16' bs')
 {-# INLINE encodeBase16' #-}
 
--- | Decode a padded Base16-encoded lazy 'ByteString' value.
+-- | Decode a Base16-encoded lazy 'ByteString' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -90,7 +90,7 @@ decodeBase16 bs = case extractBase16 bs of
       (decodeBase16 $ assertBase16 bs')
 {-# INLINE decodeBase16 #-}
 
--- | Decode Base16 'Text'.
+-- | Decode a Base16-encoded 'Text' value.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -121,7 +121,7 @@ decodeBase16Untyped (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase1
 {-# INLINE decodeBase16Untyped #-}
 
 
--- | Decode a Base16-encoded 'ByteString' value leniently, using a
+-- | Decode an untyped Base16-encoded 'ByteString' value leniently, using a
 -- strategy that never fails
 --
 -- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
@@ -142,7 +142,7 @@ decodeBase16Lenient = fromChunks
   . toChunks
 {-# INLINE decodeBase16Lenient #-}
 
--- | Tell whether a lazy 'ByteString' value is base16 encoded.
+-- | Tell whether an untyped lazy 'ByteString' value is base16 encoded.
 --
 -- === __Examples__:
 --
@@ -156,7 +156,7 @@ isBase16 :: ByteString -> Bool
 isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
 {-# INLINE isBase16 #-}
 
--- | Tell whether a lazy 'ByteString' value is a valid Base16 format.
+-- | Tell whether an untyped lazy 'ByteString' value is a valid Base16 format.
 --
 -- This will not tell you whether or not this is a correct Base16 representation,
 -- only that it conforms to the correct alphabet. To check whether it is a true

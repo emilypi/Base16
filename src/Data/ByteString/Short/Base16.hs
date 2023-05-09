@@ -38,7 +38,7 @@ import Data.Text.Short.Unsafe
 -- >>> :set -XOverloadedStrings
 --
 
--- | Encode a 'ShortByteString' value as Base16 'ShortText' with padding.
+-- | Encode a 'ShortByteString' value as Base16 'ShortText'
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -53,7 +53,7 @@ encodeBase16 :: ShortByteString -> Base16 ShortText
 encodeBase16 = fmap fromShortByteStringUnsafe . encodeBase16'
 {-# INLINE encodeBase16 #-}
 
--- | Encode a 'ShortByteString' value as a Base16 'ShortByteString'  value with padding.
+-- | Encode a 'ShortByteString' value as a Base16 'ShortByteString'  value
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -108,7 +108,7 @@ decodeBase16Untyped :: ShortByteString -> Either Text ShortByteString
 decodeBase16Untyped = decodeBase16Short_
 {-# INLINE decodeBase16Untyped #-}
 
--- | Decode a Base16-encoded 'ShortByteString' value leniently, using a
+-- | Decode an untyped Base16-encoded 'ShortByteString' value leniently, using a
 -- strategy that never fails
 --
 -- N.B.: this is not RFC 4648-compliant
@@ -126,7 +126,7 @@ decodeBase16Lenient :: ShortByteString -> ShortByteString
 decodeBase16Lenient = decodeBase16ShortLenient_
 {-# INLINE decodeBase16Lenient #-}
 
--- | Tell whether a 'ShortByteString' value is base16 encoded.
+-- | Tell whether an untyped 'ShortByteString' value is base16 encoded.
 --
 -- === __Examples__:
 --
@@ -140,7 +140,7 @@ isBase16 :: ShortByteString -> Bool
 isBase16 = B16.isBase16 . fromShort
 {-# INLINE isBase16 #-}
 
--- | Tell whether a 'ShortByteString' value is a valid Base16 format.
+-- | Tell whether an untyped 'ShortByteString' value is a valid Base16 format.
 --
 -- This will not tell you whether or not this is a correct Base16 representation,
 -- only that it conforms to the correct alphabet. To check whether it is a true

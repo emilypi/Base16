@@ -40,7 +40,7 @@ import qualified Data.Text.Encoding as T
 -- >>> :set -XOverloadedStrings
 --
 
--- | Encode a 'ByteString' value as Base16 'Text' with padding.
+-- | Encode a 'ByteString' value as Base16 'Text'
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -53,7 +53,7 @@ encodeBase16 :: ByteString -> Base16 Text
 encodeBase16 = fmap T.decodeUtf8 . encodeBase16'
 {-# INLINE encodeBase16 #-}
 
--- | Encode a 'ByteString' value as a Base16 'ByteString'  value with padding.
+-- | Encode a 'ByteString' value as a Base16 'ByteString' value
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -125,7 +125,7 @@ decodeBase16Lenient :: ByteString -> ByteString
 decodeBase16Lenient = decodeBase16Lenient_
 {-# INLINE decodeBase16Lenient #-}
 
--- | Tell whether a 'ByteString' value is base16 encoded.
+-- | Tell whether an untyped 'ByteString' value is base16 encoded.
 --
 -- === __Examples__:
 --
@@ -139,7 +139,7 @@ isBase16 :: ByteString -> Bool
 isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
 {-# INLINE isBase16 #-}
 
--- | Tell whether a 'ByteString' value is a valid Base16 format.
+-- | Tell whether an untyped 'ByteString' value is a valid Base16 format.
 --
 -- This will not tell you whether or not this is a correct Base16 representation,
 -- only that it conforms to the correct alphabet. To check whether it is a true

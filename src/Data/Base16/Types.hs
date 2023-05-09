@@ -1,5 +1,4 @@
 {-# language ExplicitNamespaces #-}
-{-# language Safe #-}
 -- |
 -- Module       : Data.ByteString.Base16.Types
 -- Copyright    : (c) 2019-2022 Emily Pillmore
@@ -23,7 +22,7 @@ module Data.Base16.Types
 
 import Data.Base16.Types.Internal (Base16(..))
 
--- | Assert a value to be encoded in a specific way
+-- | Assert the provenance of a value.
 --
 -- /Warning/: This is a blind assertion that a particular
 -- value is base16 encoded in some alphabet. If you are not
