@@ -159,16 +159,19 @@ mean                 458.9 μs   (458.4 μs .. 459.5 μs)
 std dev              1.839 μs   (1.355 μs .. 2.951 μs)
 ```
 
-See the full outputs for [`base64-1.0.0.0`](output-1.0.html) and [`base64-0.3.2.1`](output-0.3.2.1.html) in this source repo for comparison. You can see a parity in the `encode` step between the previous library iterations and the new epoch, with a *marked* improvement in decode speed (up to 25% faster on average between the old and new versions in the optimal case, and up to 40% in the suboptimal case) which justifies the performance aspect to me. Without deferring to pipelining instructions, hex encoding can only get so fast. In the future, this change also opens the library up to an optimal SIMD implementations.
+Benchmarks are included in this repo for you to reproduce these results on your own. You can see a parity in the `encode` step between the previous library iterations and the new epoch, with a *marked* improvement in decode speed (up to 25% faster on average between the old and new versions in the optimal case, and up to 40% in the suboptimal case) which justifies the performance aspect to me. Without deferring to pipelining instructions, hex encoding can only get so fast. In the future, this change also opens the library up to an optimal SIMD implementations.
 
 ## A sounder api
 
-Second, I do not believe that these changes are unsound or overburdensome to the point that a migration to the new paradigm would be untenable. While it may be inconvenient to unwrap `Base16` types, in the `encode` case (all one must do is call `extractBase16` to extract the value from its wrapper, all caveats implied), and in the case of `decode`, an untyped variant is supplied, and is semantically consitent with the old behavior (the loop is the same). Hence, a migration is fairly easy to sketch out:
+Second, I do not believe that these changes are unsound or overburdensome to the point that a migration to the new paradigm would be untenable. While it may be inconvenient to unwrap `Base16` types, in the `encode` case (all one must do is call `extractBase16` to extract the value from its wrapper, all caveats implied), and in the case of `decode`, an untyped variant is supplied, and is semantically consistent with the old behavior (the loop is the same). Hence, a migration is fairly easy to sketch out:
 
 ```
 "encodeBase16'" -> "extractBase16 . encodeBase16'"
 "encodeBase16" -> "extractBase16 . encodeBase16"
 "decodebase16" -> "decodeBase16Untyped"
+"decodeBase16Unpadded" -> "decodeBase16UnpaddedUntyped"
+"decodeBase16Padded" -> "decodeBase16PaddedUntyped"
+"decodeBase16W*With" -> "decodeBase16*WithUntyped"
 ```
 
 And that is all. In order to make use of the new loops, one must only `assertBase16` and proceed with using `decodeBase16` as usual in order to decode. You'll note that an untyped `encodeBase16` is not supplied, and this is due to the fact that it's trivial to extract a `Base16` encoded value once you have it. However, I want to encourage people to use the new API, so I have only supplied a decode with error checking in the untyped case, because sometimes we deal with other people's data and cannot establish provenance. In the encode case, I would rather keep that provenance a part of the API, and the user may opt to strip that data upon sending to others or around their systems. It's not my problem at that point!
