@@ -18,13 +18,14 @@ build-type:      Simple
 extra-doc-files:
   CHANGELOG.md
   README.md
+  MIGRATION-1.0.md
 
 tested-with:
   GHC ==8.10.7
    || ==9.0.2
    || ==9.2.5
    || ==9.4.5
-   || ==9.6.1
+   || ==9.6.2
 
 source-repository head
   type:     git
