@@ -9,7 +9,10 @@
   - Optimize loops in the typed case
 
 - Bump lower bound on `bytestring` to `bytestring-0.11`
+- Bump lower bound on `text` to `text-2.0`
 - Support for all recent GHCs
+- Removed support for SafeHaskell
+
 ## 0.3.2.1
 
 * Add support for GHC 9.4
