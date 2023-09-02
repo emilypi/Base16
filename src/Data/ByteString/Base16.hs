@@ -151,9 +151,7 @@ isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
 -- Right "666f"
 --
 parseBase16 :: ByteString -> Either Text (Base16 ByteString)
-parseBase16 bs
-  | isValidBase16 bs = assertBase16 bs <$ decodeBase16Untyped bs
-  | otherwise = Left "no valid Base16 format"
+parseBase16 bs = assertBase16 bs <$ decodeBase16Untyped bs
 
 -- | Tell whether an untyped 'ByteString' value is a valid Base16 format.
 --
