@@ -22,6 +22,7 @@ module Data.ByteString.Base16
 , decodeBase16Lenient
 , isBase16
 , isValidBase16
+, parseBase16
 ) where
 
 
@@ -138,6 +139,21 @@ decodeBase16Lenient = decodeBase16Lenient_
 isBase16 :: ByteString -> Bool
 isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
 {-# INLINE isBase16 #-}
+
+-- | Try to parse something that's assumed to be base16 encoded into the proper type
+--
+-- === __Examples__:
+--
+-- >>> parseBase16 "666f6"
+-- Left "invalid bytestring size"
+--
+-- >>> parseBase16 "666f"
+-- Right "666f"
+--
+parseBase16 :: ByteString -> Either Text (Base16 ByteString)
+parseBase16 bs
+  | isValidBase16 bs = assertBase16 bs <$ decodeBase16Untyped bs
+  | otherwise = Left "no valid Base16 format"
 
 -- | Tell whether an untyped 'ByteString' value is a valid Base16 format.
 --
