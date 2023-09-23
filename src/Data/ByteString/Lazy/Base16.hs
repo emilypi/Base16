@@ -33,6 +33,7 @@ import qualified Data.ByteString as B
 import Data.ByteString.Lazy (all, elem, fromChunks, toChunks)
 import Data.ByteString.Lazy.Internal (ByteString(..))
 import qualified Data.ByteString.Base16.Internal.Head as B16
+import qualified Data.ByteString.Base16 as B16 (isValidBase16)
 import Data.ByteString.Base16.Internal.Utils (reChunk)
 import Data.Either
 import Data.Text.Lazy (Text)
@@ -171,5 +172,7 @@ isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
 -- True
 --
 isValidBase16 :: ByteString -> Bool
-isValidBase16 = all (`elem` "0123456789abcdefABCDEF")
+isValidBase16 bs = case bs of
+    Empty -> True
+    Chunk sbs next -> B16.isValidBase16 sbs && isValidBase16 next
 {-# INLINE isValidBase16 #-}
