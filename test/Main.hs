@@ -28,6 +28,9 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Short as SBS
 import "base16" Data.ByteString.Base16 as B16
 import qualified "base16-bytestring" Data.ByteString.Base16 as Bos
+import Data.Char (chr)
+import qualified Data.List as L
+import Data.String (fromString)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Text.Encoding.Base16.Error (Base16Error(..))
@@ -77,7 +80,30 @@ tests = testGroup "Base16 Tests"
     , mkDecodeTree
       (second TS.fromText . T.decodeUtf8' . SBS.fromShort) sb16
     ]
+  , testCase "isValidBase16" $
+    assertBool "accepts invalid hex" $
+      isValidBase16 valids && not (L.any B16.isValidBase16 invalids)
+  , testCase "isBase16" $
+    assertBool "accepts invalid hex" $
+      isBase16 valids && not (L.any B16.isBase16 invalids)
   ]
+
+valids :: BS.ByteString
+valids = fromString hexChars
+
+hexChars :: String
+hexChars = "0123456789abcdefABCDEF"
+
+-- This is to verify EVERY non-hex char is "not valid"
+-- The bytestrings have the same character twice, so that
+-- the 'isBase16' function doesn't just say 'False'
+-- because of the odd number of bytes.
+invalids :: [BS.ByteString]
+invalids = fromString <$> separate8s
+  where
+    allWord8 = chr <$> [0..255]
+    nonHex = L.filter (`L.notElem` hexChars) allWord8
+    separate8s = (\c -> [c,c]) <$> nonHex
 
 -- ---------------------------------------------------------------- --
 -- Test tree generation
