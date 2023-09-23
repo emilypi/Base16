@@ -144,7 +144,7 @@ decodeBase16Lenient = decodeBase16Lenient_
 -- True
 --
 isBase16 :: ByteString -> Bool
-isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
+isBase16 bs = even (length bs) && isValidBase16 bs
 {-# INLINE isBase16 #-}
 
 -- | Try to parse something that's assumed to be base16 encoded into the proper type
