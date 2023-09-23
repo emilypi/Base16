@@ -26,16 +26,15 @@ module Data.ByteString.Lazy.Base16
 
 
 
-import Prelude hiding (all, elem)
+import Prelude hiding (elem, length)
 
 import Data.Base16.Types
 import qualified Data.ByteString as B
-import Data.ByteString.Lazy (all, elem, fromChunks, toChunks)
+import Data.ByteString.Lazy (elem, fromChunks, length, toChunks)
 import Data.ByteString.Lazy.Internal (ByteString(..))
 import qualified Data.ByteString.Base16.Internal.Head as B16
 import qualified Data.ByteString.Base16 as B16 (isValidBase16)
 import Data.ByteString.Base16.Internal.Utils (reChunk)
-import Data.Either
 import Data.Text.Lazy (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
@@ -154,7 +153,7 @@ decodeBase16Lenient = fromChunks
 -- True
 --
 isBase16 :: ByteString -> Bool
-isBase16 bs = isValidBase16 bs && isRight (decodeBase16Untyped bs)
+isBase16 bs = even (length bs) && isValidBase16 bs
 {-# INLINE isBase16 #-}
 
 -- | Tell whether an untyped lazy 'ByteString' value is a valid Base16 format.
