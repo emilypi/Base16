@@ -30,7 +30,7 @@ import Prelude hiding (elem, length)
 
 import Data.Base16.Types
 import qualified Data.ByteString as B
-import Data.ByteString.Lazy (elem, fromChunks, length, toChunks)
+import Data.ByteString.Lazy (elem, foldrChunks, fromChunks, length, toChunks)
 import Data.ByteString.Lazy.Internal (ByteString(..))
 import qualified Data.ByteString.Base16.Internal.Head as B16
 import qualified Data.ByteString.Base16 as B16 (isValidBase16)
@@ -171,7 +171,5 @@ isBase16 bs = even (length bs) && isValidBase16 bs
 -- True
 --
 isValidBase16 :: ByteString -> Bool
-isValidBase16 bs = case bs of
-    Empty -> True
-    Chunk sbs next -> B16.isValidBase16 sbs && isValidBase16 next
+isValidBase16 = foldrChunks (\chunk rest -> B16.isValidBase16 chunk && rest) True
 {-# INLINE isValidBase16 #-}

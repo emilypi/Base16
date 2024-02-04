@@ -31,7 +31,7 @@ import Prelude hiding (length)
 
 import Data.Base16.Types
 import Data.ByteString (length)
-import Data.ByteString.Internal (ByteString(BS))
+import Data.ByteString.Internal (ByteString(BS), accursedUnutterablePerformIO)
 import Data.ByteString.Base16.Internal.Head
 import Data.ByteString.Base16.Internal.Utils (aix)
 import Data.Text (Text)
@@ -40,7 +40,6 @@ import qualified Data.Text.Encoding as T
 import Foreign.ForeignPtr
 import Foreign.Ptr
 import Foreign.Storable
-import System.IO.Unsafe (unsafeDupablePerformIO)
 
 -- $setup
 --
@@ -176,7 +175,7 @@ parseBase16 bs = assertBase16 bs <$ decodeBase16Untyped bs
 --
 isValidBase16 :: ByteString -> Bool
 isValidBase16 (BS ptr len) =
-    unsafeDupablePerformIO $ do
+    accursedUnutterablePerformIO $ do
         withForeignPtr ptr $ \bptr ->
             go bptr (plusPtr bptr len)
   where
