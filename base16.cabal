@@ -21,10 +21,11 @@ extra-doc-files:
   MIGRATION-1.0.md
 
 tested-with:
-  GHC ==9.4.5
+  GHC ==9.4.8
    || ==9.6.6
    || ==9.8.2
    || ==9.10.1
+   || ==9.12.1
 
 source-repository head
   type:     git
@@ -49,7 +50,7 @@ library
     Data.ByteString.Base16.Internal.W16.ShortLoop
 
   build-depends:
-      base        >=4.14 && <4.21
+      base        >=4.14 && <4.22
     , bytestring  >=0.11 && <0.13
     , deepseq     >=1.4.4.0 && <1.6
     , primitive   >=0.6  && <0.10
@@ -67,7 +68,7 @@ test-suite base16-tests
   hs-source-dirs:   test
   main-is:          Main.hs
   build-depends:
-      base               >=4.14 && <4.21
+      base               >=4.14 && <4.22
     , base16
     , base16-bytestring  >=1.0
     , bytestring         >=0.11
@@ -85,7 +86,7 @@ benchmark bench
   hs-source-dirs:   benchmarks
   main-is:          Base16Bench.hs
   build-depends:
-      base               >=4.14 && <4.21
+      base               >=4.14 && <4.22
     , base16
     , base16-bytestring  >=1.0
     , bytestring         >=0.11
