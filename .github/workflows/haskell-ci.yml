@@ -28,7 +28,7 @@ jobs:
         ghc-version: ${{ matrix.ghc }}
     - name: Update cabal package database
       run: cabal update
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache cabal stuff
       with:
         path: |
@@ -66,7 +66,7 @@ jobs:
         ghc-version: 'latest'
     - name: Update cabal package database
       run: cabal update
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache cabal stuff
       with:
         path: |
