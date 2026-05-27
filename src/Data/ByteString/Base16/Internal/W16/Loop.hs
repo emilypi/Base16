@@ -158,4 +158,4 @@ lenientLoop !dfp !dptr !sptr !end !nn = goHi dptr sptr nn
         else do
           poke dst (a .|. b)
           goHi (plusPtr dst 1) (plusPtr src 1) (n + 1)
-{-# LANGUAGE lenientLoop #-}
+{-# INLINE lenientLoop #-}
