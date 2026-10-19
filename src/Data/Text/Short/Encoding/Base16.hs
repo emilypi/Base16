@@ -24,7 +24,6 @@ module Data.Text.Short.Encoding.Base16
 
 import Data.Base16.Types
 import Data.Bifunctor (first)
-import qualified Data.ByteString.Base16 as B16
 import Data.ByteString.Short
 import qualified Data.ByteString.Short.Base16 as BS16
 import Data.Text (Text)
@@ -159,5 +158,5 @@ decodeBase16Lenient = fromText . T16.decodeBase16Lenient . toText
 -- @since 2.0
 --
 parseBase16 :: ShortText -> Either Text (Base16 ShortText)
-parseBase16 bs = assertBase16 bs <$ B16.parseBase16 (toByteString bs)
+parseBase16 bs = assertBase16 bs <$ BS16.parseBase16 (toShortByteString bs)
 {-# INLINE parseBase16 #-}

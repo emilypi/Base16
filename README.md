@@ -35,10 +35,13 @@ also applies to lazy Text and ShortText; see the migration guide for details.
 ## SIMD
 
 The optional, manual `simd` flag enables bundled ARM64 NEON and runtime-detected
-x86-64 AVX2/SSSE3 kernels for strict ByteString encoding and decoding, including
-the lazy and Text APIs built on those operations. Unsupported targets and
-short inputs fall back to Haskell scalar loops. ShortByteString/ShortText encoding and decoding, and lenient decoding, retain
-their scalar implementations. Short parsers validate through the strict path.
+x86-64 AVX2/SSSE3 kernels for strict ByteString and ShortByteString encoding,
+checked decoding, and typed decoding, including the lazy and Text APIs built
+on those operations. ShortByteString and ShortText use direct byte-array
+bindings without pinning or copying through strict ByteString. Their parsers
+validate through the short decoder. Unsupported targets and inputs below the
+SIMD thresholds fall back to Haskell scalar loops. Lenient decoding remains
+scalar.
 
 The flag is off by default. Enable it in your `cabal.project`:
 

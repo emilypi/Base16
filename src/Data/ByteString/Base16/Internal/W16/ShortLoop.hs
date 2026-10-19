@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -18,20 +19,30 @@ import Data.Primitive.ByteArray
 import Data.Text (Text)
 import qualified Data.Text as T
 
+#ifdef BASE16_SIMD
+import qualified Data.ByteString.Base16.Internal.SIMD as SIMD
+#endif
 
 innerLoop
     :: Int
     -> MutableByteArray s
-    -> MutableByteArray s
+    -> ByteArray
     -> ST s ()
-innerLoop !slen !dst !src = go (0 :: Int) (0 :: Int)
+innerLoop !slen !dst !src =
+#ifdef BASE16_SIMD
+  do
+    consumed <- SIMD.encodeByteArrayPrefix src slen dst
+    go (2 * consumed) consumed
+#else
+  go 0 0
+#endif
   where
     !hex = "0123456789abcdef"#
 
     go !doff !soff
       | soff == slen = return ()
       | otherwise = do
-        x <- readByteArray src soff
+        let !x = indexByteArray src soff
         writeByteArray dst doff (aix (unsafeShiftR x 4) hex)
         writeByteArray dst (doff + 1) (aix (x .&. 0x0f) hex)
         go (doff + 2) (soff + 1)
@@ -40,9 +51,16 @@ innerLoop !slen !dst !src = go (0 :: Int) (0 :: Int)
 decodeLoop
     :: Int
     -> MutableByteArray s
-    -> MutableByteArray s
+    -> ByteArray
     -> ST s (Either Text ByteArray)
-decodeLoop !slen !dst !src = go (0 :: Int) (0 :: Int)
+decodeLoop !slen !dst !src =
+#ifdef BASE16_SIMD
+  do
+    consumed <- SIMD.decodeByteArrayPrefix src slen dst
+    go (consumed `quot` 2) consumed
+#else
+  go 0 0
+#endif
   where
     err i = return . Left . T.pack
       $ "invalid character at offset: "
@@ -55,8 +73,8 @@ decodeLoop !slen !dst !src = go (0 :: Int) (0 :: Int)
     go !doff !soff
       | soff == slen = Right <$> unsafeFreezeByteArray dst
       | otherwise = do
-        x <- readByteArray src soff
-        y <- readByteArray src (soff + 1)
+        let !x = indexByteArray src soff
+            !y = indexByteArray src (soff + 1)
 
         let !a = aix x hi
             !b = aix y lo
@@ -72,9 +90,16 @@ decodeLoop !slen !dst !src = go (0 :: Int) (0 :: Int)
 decodeLoopTyped
     :: Int
     -> MutableByteArray s
-    -> MutableByteArray s
+    -> ByteArray
     -> ST s ByteArray
-decodeLoopTyped !slen !dst !src = go (0 :: Int) (0 :: Int)
+decodeLoopTyped !slen !dst !src =
+#ifdef BASE16_SIMD
+  do
+    consumed <- SIMD.decodeByteArrayPrefix src slen dst
+    go (consumed `quot` 2) consumed
+#else
+  go 0 0
+#endif
   where
     !lo = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\xff\xff\xff\xff\xff\xff\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"#
 
@@ -83,8 +108,8 @@ decodeLoopTyped !slen !dst !src = go (0 :: Int) (0 :: Int)
     go !doff !soff
       | soff == slen = unsafeFreezeByteArray dst
       | otherwise = do
-        x <- readByteArray src soff
-        y <- readByteArray src (soff + 1)
+        let !x = indexByteArray src soff
+            !y = indexByteArray src (soff + 1)
 
         let !a = aix x hi
             !b = aix y lo
@@ -97,7 +122,7 @@ decodeLoopTyped !slen !dst !src = go (0 :: Int) (0 :: Int)
 lenientLoop
     :: Int
     -> MutableByteArray s
-    -> MutableByteArray s
+    -> ByteArray
     -> ST s Int
 lenientLoop !slen !dst !src = goHi (0 :: Int) (0 :: Int)
   where
@@ -108,7 +133,7 @@ lenientLoop !slen !dst !src = goHi (0 :: Int) (0 :: Int)
     goHi !doff !soff
       | soff == slen = return doff
       | otherwise = do
-        x <- readByteArray src soff
+        let !x = indexByteArray src soff
 
         let !a = aix x hi
 
@@ -119,7 +144,7 @@ lenientLoop !slen !dst !src = goHi (0 :: Int) (0 :: Int)
     goLo !doff !soff !a
       | soff == slen = return doff
       | otherwise = do
-        y <- readByteArray src soff
+        let !y = indexByteArray src soff
 
         let !b = aix y lo
 

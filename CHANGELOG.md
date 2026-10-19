@@ -8,12 +8,15 @@ This major release removes two public functions. See
 - Replace `isBase16` and `isValidBase16` with `parseBase16` in all six
   ByteString and Text modules. Parsing checks even length and the mixed-case
   hexadecimal alphabet, then preserves the original encoded representation.
-  Boolean checks use `isRight . parseBase16`; odd-length alphabet-only inputs
+  For a Boolean check a la `isBase16`, just use `isRight` . For `parseBase16`, odd-length alphabet-only inputs
   previously accepted by `isValidBase16` are now rejected.
-- Add an optional manual `simd` flag, off by default, with bundled ARM64 NEON
-  and runtime-detected x86-64 AVX2/SSSE3 encoding and strict decoding kernels.
-  Unsupported targets and short inputs retain scalar fallbacks; short byte
-  array encoding/decoding and lenient decoding remain scalar.
+- Add an optional manual `simd` flag, which is off by default, using the bundled `cbits`
+  which give runtime-detected x86-64 AVX2/SSSE3 encoding and decoding.
+  Unsupported targets and inputs under the simd threshold use the scalar fallbacks;
+  lenient decoding remains scalar.
+- Accelerate ShortByteString/ShortText encoding and checked/typed decoding with
+  direct byte-array SIMD bindings, without pinning or copying through strict
+  ByteString. Short parsers now validate through the short decoder.
 - Preserve scalar decoding errors and input-relative offsets with SIMD.
 - Fix lazy typed decoding when hex pairs cross chunk boundaries. Lazy checked
   decoding now materializes the complete input for consistent total-length
@@ -22,14 +25,9 @@ This major release removes two public functions. See
   no longer throws on malformed UTF-8. Valid UTF-8 is preserved; invalid bytes
   fall back to their Latin-1 characters. Apply the same policy to lazy Text
   and ShortText, avoiding invalid UTF-8 inside the short-text result.
-- Keep the opaque `Base16` type and instances together in `Data.Base16.Types`;
-  expose the remaining implementation modules through Cabal.
 - Require GHC 9.6 or later, support GHC 9.6 through 9.14, refresh CI, and retire
-  the old i386 CI job. Test both SIMD settings from the source distribution.
-- Add SIMD boundary/differential tests, native sanitizer and guard-page checks,
-  and benchmark coverage around vector and foreign-call boundaries.
+  the old i386 32 bit support.
 - Guard encoded output size calculations against integer overflow.
-- Update copyright notices through 2026.
 
 ## 1.0
 

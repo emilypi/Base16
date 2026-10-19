@@ -101,7 +101,7 @@ decodeBase16Lenient_ (BS sfp slen) =
 encodeBase16Short_ :: ShortByteString -> ShortByteString
 encodeBase16Short_ (SBS !ba#) = runShortST $ do
     dst <- newByteArray l'
-    Short.innerLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+    Short.innerLoop l dst (ByteArray ba#)
     unsafeFreezeByteArray dst
   where
     !l = I# (sizeofByteArray# ba#)
@@ -114,7 +114,7 @@ decodeBase16Short_ (SBS !ba#)
     | r /= 0 = Left "invalid bytestring size"
     | otherwise = runDecodeST $ do
       dst <- newByteArray q
-      Short.decodeLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+      Short.decodeLoop l dst (ByteArray ba#)
   where
     !l = I# (sizeofByteArray# ba#)
     !q = l `quot` 2
@@ -124,7 +124,7 @@ decodeBase16Short_ (SBS !ba#)
 decodeBase16ShortTyped_ :: Base16 ShortByteString -> ShortByteString
 decodeBase16ShortTyped_ encoded = runDecodeST' $ do
     dst <- newByteArray q
-    Short.decodeLoopTyped l dst (MutableByteArray (unsafeCoerce# ba#))
+    Short.decodeLoopTyped l dst (ByteArray ba#)
   where
     !(SBS ba#) = extractBase16 encoded
     !l = I# (sizeofByteArray# ba#)
@@ -137,7 +137,7 @@ decodeBase16ShortLenient_ (SBS !ba#)
     | l == 0 = SBS.empty
     | otherwise = runShortST $ do
       dst <- newByteArray q
-      q' <- Short.lenientLoop l dst (MutableByteArray (unsafeCoerce# ba#))
+      q' <- Short.lenientLoop l dst (ByteArray ba#)
       !_ <- resizeMutableByteArray dst q'
       unsafeFreezeByteArray dst
   where

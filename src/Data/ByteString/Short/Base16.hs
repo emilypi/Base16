@@ -26,7 +26,6 @@ module Data.ByteString.Short.Base16
 import Data.Base16.Types
 import Data.ByteString.Short
 import Data.ByteString.Base16.Internal.Head
-import qualified Data.ByteString.Base16 as B16
 import Data.Text (Text)
 import Data.Text.Short
 import Data.Text.Short.Unsafe
@@ -148,5 +147,5 @@ decodeBase16Lenient = decodeBase16ShortLenient_
 -- @since 2.0
 --
 parseBase16 :: ShortByteString -> Either Text (Base16 ShortByteString)
-parseBase16 bs = assertBase16 bs <$ B16.parseBase16 (fromShort bs)
+parseBase16 bs = assertBase16 bs <$ decodeBase16Untyped bs
 {-# INLINE parseBase16 #-}
