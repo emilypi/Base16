@@ -87,10 +87,12 @@ package base16
 For this repository, use `cabal test --flags=simd`. The bundled C kernels use
 ARM64 NEON or runtime-detected x86-64 AVX2/SSSE3. Unsupported targets use the
 Haskell scalar implementation. No external SIMD library or global CPU-specific
-compiler flags are required. Short inputs, short byte-array encoding/decoding,
-and lenient decoding retain scalar paths. Strict ByteString operations and the
-lazy/Text APIs built on them use SIMD where applicable. ShortByteString and
-ShortText parsers also validate through the strict path.
+compiler flags are required. Strict ByteString and ShortByteString encoding,
+checked decoding, and typed decoding use SIMD where applicable, as do the
+lazy/Text APIs built on them. ShortByteString and ShortText use direct
+byte-array bindings without pinning or copying through strict ByteString;
+their parsers validate through the short decoder. Inputs below the SIMD
+thresholds and lenient decoding retain scalar paths.
 
 ## Compiler and module support
 

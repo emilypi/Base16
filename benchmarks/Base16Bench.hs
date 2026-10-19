@@ -28,10 +28,14 @@ benchSize size = env inputs $ \ ~(raw, encoded, shortRaw, shortEncoded) ->
     , bgroup "decode"
       [ bench (variant ++ "-typed") $ nf B16.decodeBase16 (assertBase16 encoded)
       , bench (variant ++ "-checked") $ nf B16.decodeBase16Untyped encoded
-      , bench "base16-short" $ nf S16.decodeBase16 (assertBase16 shortEncoded)
+      , bench "base16-short-typed" $ nf S16.decodeBase16 (assertBase16 shortEncoded)
+      , bench "base16-short-checked" $ nf S16.decodeBase16Untyped shortEncoded
       , bench "base16-bytestring" $ nf Reference.decode encoded
       ]
-    , bench ("parse/" ++ variant) $ nf B16.parseBase16 encoded
+    , bgroup "parse"
+      [ bench variant $ nf B16.parseBase16 encoded
+      , bench "base16-short" $ nf S16.parseBase16 shortEncoded
+      ]
     ]
   where
     inputs = do

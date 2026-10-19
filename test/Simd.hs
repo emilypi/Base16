@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PackageImports #-}
+{-# LANGUAGE MagicHash #-}
 -- |
 -- Module       : Simd
 -- Copyright    : (c) 2026 Emily Pillmore
@@ -16,13 +17,17 @@
 -- cannot cancel out as they could in roundtrip-only tests.
 module Simd (tests) where
 
-import Control.Monad (forM_)
+import Control.Concurrent (forkIO, killThread, threadDelay)
+import Control.Exception (bracket)
+import Control.Monad (forM_, forever)
 import Data.Base16.Types (assertBase16, extractBase16)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Short as SBS
+import qualified Data.ByteString.Short.Internal as SBSI
 import qualified "base16" Data.ByteString.Base16 as B16
+import qualified "base16" Data.ByteString.Short.Base16 as S16
 import qualified "base16-bytestring" Data.ByteString.Base16 as Bos
 import Data.Char (toUpper)
 import qualified Data.Text as T
@@ -30,7 +35,9 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Short as TS
 import Data.Word (Word8)
+import GHC.Exts (isByteArrayPinned#, isTrue#)
 import Internal (Harness(..), b16, lb16, sb16, t16, tl16, ts16)
+import System.Mem (performGC)
 import Test.QuickCheck (arbitrary, choose, conjoin, forAll, vectorOf, (===))
 import Test.Tasty (TestTree, localOption, testGroup)
 import Test.Tasty.HUnit (Assertion, assertEqual, testCase)
@@ -62,24 +69,59 @@ tests = testGroup "SIMD compatibility"
           (B16.parseBase16 input)
         assertEqual "odd decoder input" (Left "invalid bytestring size")
           (B16.decodeBase16Untyped input)
+        assertEqual "odd short parser input" (Left "invalid bytestring size")
+          (S16.parseBase16 (SBS.toShort input))
+        assertEqual "odd short decoder input" (Left "invalid bytestring size")
+          (S16.decodeBase16Untyped (SBS.toShort input))
   , testCase "lazy chunks split pairs across vector blocks" $
       forM_ [15, 16, 17, 31, 32, 33, 63, 64, 65, 127, 128, 129, 4096] $ \n ->
         forM_ [1, 2, 3, 7, 15, 16, 17, 31, 32, 63, 64, 127] $ \chunkSize ->
           checkHarness ("lazy length=" ++ show n ++ ", chunk=" ++ show chunkSize)
             lb16 (LBS.fromChunks . chunksOf chunkSize) (payload n)
   , testCase "short byte arrays remain compatible across boundaries and large inputs" $
-      forM_ [0, 1, 2, 15, 16, 17, 31, 32, 33, 127, 128, 129, 4096, 65536] $ \n ->
+      forM_ sizes $ \n ->
         checkHarness ("short length=" ++ show n) sb16 SBS.toShort (payload n)
+  , testCase "short decoding reports errors in the final block and scalar tail" $
+      forM_ [126, 128, 130, 254, 256, 258, 4096, 4098] $ \n ->
+        forM_ [n - 33 .. n - 1] $ \position ->
+          forM_ [35, 128, 255] $ \byte -> do
+            let input = SBS.toShort $
+                  BS.replicate position 48 <> BS.singleton byte
+                    <> BS.replicate (n - position - 1) 70
+                expected = Left ("invalid character at offset: " <> T.pack (show position))
+                note = "short length=" ++ show n ++ ", position=" ++ show position
+            assertEqual (note ++ ": decoder") expected (S16.decodeBase16Untyped input)
+            assertEqual (note ++ ": parser") expected (S16.parseBase16 input)
+  , testCase "short codecs retain unpinned arrays under GC pressure" $
+      bracket (forkIO (forever (performGC >> threadDelay 1000))) killThread $ \_ ->
+        forM_ [0 .. 31] $ \byte ->
+          forM_ [64, 65, 127, 128, 129, 511, 1023] $ \n -> do
+            let raw = BS.map (+ byte) (payload n)
+                input = SBS.pack (BS.unpack raw)
+                encoded = extractBase16 (S16.encodeBase16' input)
+                decoded = S16.decodeBase16 (assertBase16 encoded)
+                note = "unpinned length=" ++ show n ++ ", byte=" ++ show byte
+            assertEqual (note ++ ": source is unpinned") False (isPinned input)
+            assertEqual (note ++ ": encoded output is unpinned") False (isPinned encoded)
+            assertEqual (note ++ ": decoded output is unpinned") False (isPinned decoded)
+            checkHarness note sb16 (SBS.pack . BS.unpack) raw
+            assertEqual (note ++ ": source unchanged") raw (SBS.fromShort input)
   , testCase "text wrappers preserve long Unicode payloads" textWrappers
   , localOption (QuickCheckTests 40) $
       testProperty "large random payloads agree with the independent codec" $
         forAll largePayload $ \raw ->
           let encoded = Bos.encode raw
+              shortRaw = SBS.toShort raw
+              shortEncoded = SBS.toShort encoded
           in conjoin
             [ extractBase16 (B16.encodeBase16' raw) === encoded
             , B16.decodeBase16 (assertBase16 encoded) === raw
             , B16.decodeBase16Untyped encoded === Right raw
             , fmap extractBase16 (B16.parseBase16 encoded) === Right encoded
+            , extractBase16 (S16.encodeBase16' shortRaw) === shortEncoded
+            , S16.decodeBase16 (assertBase16 shortEncoded) === shortRaw
+            , S16.decodeBase16Untyped shortEncoded === Right shortRaw
+            , fmap extractBase16 (S16.parseBase16 shortEncoded) === Right shortEncoded
             ]
   ]
   where
@@ -89,6 +131,9 @@ tests = testGroup "SIMD compatibility"
     largePayload = do
       n <- choose (4096, 65536)
       BS.pack <$> vectorOf n arbitrary
+
+isPinned :: SBS.ShortByteString -> Bool
+isPinned (SBSI.SBS bytes) = isTrue# (isByteArrayPinned# bytes)
 
 -- Invalid surrounding bytes ensure the codec respects the slice's bounds.
 sliceAt :: Int -> BS.ByteString -> BS.ByteString
@@ -136,6 +181,10 @@ checkInvalid :: Int -> Int -> Word8 -> Assertion
 checkInvalid offset position byte = do
   assertEqual (note ++ ": parser") (Left expected) (B16.parseBase16 input)
   assertEqual (note ++ ": decoder") (Left expected) (B16.decodeBase16Untyped input)
+  assertEqual (note ++ ": short parser") (Left expected)
+    (S16.parseBase16 (SBS.toShort input))
+  assertEqual (note ++ ": short decoder") (Left expected)
+    (S16.decodeBase16Untyped (SBS.toShort input))
   where
     -- A second invalid byte ensures that the first bad lane wins. The valid
     -- suffix keeps the first error out of the scalar-only tail.
