@@ -4,6 +4,10 @@ on:
     branches:
       - master
   pull_request: {} # Validate all PRs
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
 
 defaults:
   run:
@@ -16,40 +20,66 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        ghc: ['9.4', '9.6', '9.8', '9.10']
+        ghc: ['9.6.7', '9.8.4', '9.10.3', '9.12.4', '9.14.1']
+        simd: ['-simd', 'simd']
         include:
-        - os: macOS-latest
-          ghc: 'latest'
+        - os: macos-15
+          ghc: '9.14.1'
+          simd: '-simd'
+        - os: macos-15
+          ghc: '9.14.1'
+          simd: 'simd'
     steps:
-    - uses: actions/checkout@v3
-    - uses: haskell/actions/setup@v2
+    - uses: actions/checkout@v7
+    - uses: haskell-actions/setup@v2.12.1
       id: setup-haskell-cabal
       with:
         ghc-version: ${{ matrix.ghc }}
+        cabal-version: 'latest'
     - name: Update cabal package database
       run: cabal update
-    - uses: actions/cache@v3
+    - uses: actions/cache@v6
       name: Cache cabal stuff
       with:
         path: |
           ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          dist-newstyle
-        key: ${{ runner.os }}-${{ matrix.ghc }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.simd }}-ghc-${{ steps.setup-haskell-cabal.outputs.ghc-version }}-cabal-${{ steps.setup-haskell-cabal.outputs.cabal-version }}-${{ hashFiles('**/*.cabal', 'cabal.project') }}
     - name: Test
       run: |
         cabal sdist -z -o .
         cabal get base16-*.tar.gz
         cd base16-*/
-        cabal build base16:tests --enable-tests --enable-benchmarks
-        cabal test --enable-tests --enable-benchmarks --test-show-details=direct all
+        cabal build base16:tests --enable-tests --enable-benchmarks --flags=${{ matrix.simd }}
+        cabal test --enable-tests --enable-benchmarks --flags=${{ matrix.simd }} --test-show-details=direct all
     - name: Bench
       run: |
         cd base16-*/
-        cabal bench --enable-tests --enable-benchmarks --benchmark-option=-l all
+        cabal bench --enable-tests --enable-benchmarks --flags=${{ matrix.simd }} --benchmark-options='--iters 1' all
     - name: Haddock
       run: |
         cd base16-*/
-        cabal haddock all
+        cabal haddock --flags=${{ matrix.simd }} all
+    - name: Native SIMD memory checks
+      if: matrix.simd == 'simd' && matrix.ghc == '9.14.1'
+      env:
+        UBSAN_OPTIONS: halt_on_error=1
+      run: |
+        cd base16-*/
+        cc -std=c99 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -Icbits cbits/base16_simd.c test/simd-native.c -o "$RUNNER_TEMP/base16-simd-check"
+        if [[ "$RUNNER_OS" == Linux && "$RUNNER_ARCH" == X64 ]]; then
+          "$RUNNER_TEMP/base16-simd-check" --require-backend 3
+          cc -std=c99 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -DHS_BASE16_SIMD_FORCE_SSSE3 -Icbits cbits/base16_simd.c test/simd-native.c -o "$RUNNER_TEMP/base16-ssse3-check"
+          "$RUNNER_TEMP/base16-ssse3-check" --require-backend 1
+        elif [[ "$RUNNER_OS" == macOS ]]; then
+          test "$RUNNER_ARCH" = ARM64
+          "$RUNNER_TEMP/base16-simd-check" --require-backend 2
+        else
+          "$RUNNER_TEMP/base16-simd-check"
+        fi
+        cc -std=c99 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -DHS_BASE16_SIMD_FORCE_SCALAR -Icbits cbits/base16_simd.c test/simd-native.c -o "$RUNNER_TEMP/base16-scalar-check"
+        "$RUNNER_TEMP/base16-scalar-check" --require-backend 0
+        cc -std=c99 -O2 -Wall -Wextra -Werror -Icbits cbits/base16_simd.c benchmarks/simd-native.c -o "$RUNNER_TEMP/base16-native-bench"
+        "$RUNNER_TEMP/base16-native-bench" --seconds 0.001 --rounds 1 --pattern random
     - name: Cabal check
       run: |
         cd base16-*/
@@ -58,38 +88,23 @@ jobs:
   bounds-checking:
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        simd: ['-simd', 'simd']
     steps:
-    - uses: actions/checkout@v3
-    - uses: haskell/actions/setup@v2
+    - uses: actions/checkout@v7
+    - uses: haskell-actions/setup@v2.12.1
       id: setup-haskell-cabal
       with:
-        ghc-version: 'latest'
+        ghc-version: '9.14.1'
+        cabal-version: 'latest'
     - name: Update cabal package database
       run: cabal update
-    - uses: actions/cache@v3
+    - uses: actions/cache@v6
       name: Cache cabal stuff
       with:
         path: |
           ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          dist-newstyle
-        key: ${{ runner.os }}-latest
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.simd }}-bounds-ghc-${{ steps.setup-haskell-cabal.outputs.ghc-version }}-cabal-${{ steps.setup-haskell-cabal.outputs.cabal-version }}-${{ hashFiles('**/*.cabal', 'cabal.project') }}
     - name: Test
-      run: cabal test --ghc-options='-fcheck-prim-bounds -fno-ignore-asserts'
-
-  i386:
-    needs: build
-    runs-on: ubuntu-latest
-    container:
-      image: i386/ubuntu:bionic
-    steps:
-    - name: Install
-      run: |
-        apt-get update -y
-        apt-get install -y autoconf build-essential zlib1g-dev libgmp-dev curl libncurses5 libtinfo5 libncurses5-dev libtinfo-dev
-        curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 BOOTSTRAP_HASKELL_INSTALL_NO_STACK=1 sh
-    - uses: actions/checkout@v1
-    - name: Test
-      run: |
-        source ~/.ghcup/env
-        cabal update
-        cabal test
+      run: cabal test --flags=${{ matrix.simd }} --ghc-options='-fcheck-prim-bounds -fno-ignore-asserts'

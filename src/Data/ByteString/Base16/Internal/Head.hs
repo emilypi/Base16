@@ -13,7 +13,7 @@ module Data.ByteString.Base16.Internal.Head
 ) where
 
 
-import Data.Base16.Types.Internal (Base16(..))
+import Data.Base16.Types (Base16, extractBase16)
 import qualified Data.ByteString as BS (empty)
 import Data.ByteString.Internal
 import qualified Data.ByteString.Short as SBS (empty)
@@ -44,7 +44,7 @@ encodeBase16_ (BS sfp slen) =
           sptr
           (plusPtr sptr slen)
   where
-    !dlen = 2 * slen
+    !dlen = encodedLength slen
 {-# INLINE encodeBase16_ #-}
 
 decodeBase16_ :: ByteString -> Either Text ByteString
@@ -67,7 +67,7 @@ decodeBase16_ (BS sfp slen)
 {-# INLINE decodeBase16_ #-}
 
 decodeBase16Typed_ :: Base16 ByteString -> ByteString
-decodeBase16Typed_ (Base16 (BS sfp slen)) =
+decodeBase16Typed_ encoded =
   unsafeCreate q $ \dptr ->
     withForeignPtr sfp $ \sptr ->
       decodeLoopTyped
@@ -75,6 +75,7 @@ decodeBase16Typed_ (Base16 (BS sfp slen)) =
         sptr
         (plusPtr sptr slen)
   where
+    BS sfp slen = extractBase16 encoded
     !q = slen `quot` 2
 {-# INLINE decodeBase16Typed_ #-}
 
@@ -104,7 +105,7 @@ encodeBase16Short_ (SBS !ba#) = runShortST $ do
     unsafeFreezeByteArray dst
   where
     !l = I# (sizeofByteArray# ba#)
-    !l' = l * 2
+    !l' = encodedLength l
 {-# INLINE encodeBase16Short_ #-}
 
 decodeBase16Short_ :: ShortByteString -> Either Text ShortByteString
@@ -121,10 +122,11 @@ decodeBase16Short_ (SBS !ba#)
 {-# INLINE decodeBase16Short_ #-}
 
 decodeBase16ShortTyped_ :: Base16 ShortByteString -> ShortByteString
-decodeBase16ShortTyped_ (Base16 (SBS !ba#)) = runDecodeST' $ do
+decodeBase16ShortTyped_ encoded = runDecodeST' $ do
     dst <- newByteArray q
     Short.decodeLoopTyped l dst (MutableByteArray (unsafeCoerce# ba#))
   where
+    !(SBS ba#) = extractBase16 encoded
     !l = I# (sizeofByteArray# ba#)
     !q = l `quot` 2
 {-# INLINE decodeBase16ShortTyped_ #-}
@@ -142,3 +144,10 @@ decodeBase16ShortLenient_ (SBS !ba#)
     !l = I# (sizeofByteArray# ba#)
     !q = l `quot` 2
 {-# INLINE decodeBase16ShortLenient_ #-}
+
+-- Check before allocating or passing the output buffer to native code.
+encodedLength :: Int -> Int
+encodedLength n
+    | n > maxBound `quot` 2 = error "base16: encoded output too large"
+    | otherwise = 2 * n
+{-# INLINE encodedLength #-}

@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeApplications #-}
 -- |
 -- Module       : Data.ByteString.Base16.Internal.W16.Loop
--- Copyright 	: (c) 2020 Emily Pillmore
+-- Copyright 	: (c) 2020-2026 Emily Pillmore
 -- License	: BSD-style
 --
 -- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
@@ -26,6 +26,9 @@ module Data.ByteString.Base16.Internal.W16.Loop
 import Data.Bits
 import Data.ByteString.Internal
 import Data.ByteString.Base16.Internal.Utils
+#ifdef BASE16_SIMD
+import qualified Data.ByteString.Base16.Internal.SIMD as SIMD
+#endif
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -43,7 +46,13 @@ innerLoop
     -> Ptr Word8
     -> Ptr Word8
     -> IO ()
-innerLoop !dptr !sptr !end = go dptr sptr
+innerLoop !dptr !sptr !end = do
+#ifdef BASE16_SIMD
+    consumed <- SIMD.encodePrefix sptr (end `minusPtr` sptr) dptr
+    go (plusPtr dptr (2 * consumed)) (plusPtr sptr consumed)
+#else
+    go dptr sptr
+#endif
   where
     !hex = "0123456789abcdef"#
 
@@ -66,7 +75,13 @@ decodeLoop
   -> Ptr Word8
   -> Int
   -> IO (Either Text ByteString)
-decodeLoop !dfp !dptr !sptr !end !l = go dptr sptr
+decodeLoop !dfp !dptr !sptr !end !l = do
+#ifdef BASE16_SIMD
+    consumed <- SIMD.decodePrefix sptr (end `minusPtr` sptr) dptr
+    go (plusPtr dptr (consumed `quot` 2)) (plusPtr sptr consumed)
+#else
+    go dptr sptr
+#endif
   where
     err !src = return . Left . T.pack
       $ "invalid character at offset: "
@@ -99,7 +114,13 @@ decodeLoopTyped
   -> Ptr Word8
   -> Ptr Word8
   -> IO ()
-decodeLoopTyped !dptr !sptr !end = go dptr sptr
+decodeLoopTyped !dptr !sptr !end = do
+#ifdef BASE16_SIMD
+    consumed <- SIMD.decodePrefix sptr (end `minusPtr` sptr) dptr
+    go (plusPtr dptr (consumed `quot` 2)) (plusPtr sptr consumed)
+#else
+    go dptr sptr
+#endif
   where
     !lo = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\xff\xff\xff\xff\xff\xff\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"#
 

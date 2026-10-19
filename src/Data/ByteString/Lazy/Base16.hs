@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Module       : Data.ByteString.Lazy.Base16
--- Copyright    : (c) 2020-2023 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -20,20 +20,19 @@ module Data.ByteString.Lazy.Base16
 , decodeBase16'
 , decodeBase16Untyped
 , decodeBase16Lenient
-, isBase16
-, isValidBase16
+, parseBase16
 ) where
 
 
 
-import Prelude hiding (elem, length)
+import Prelude hiding (elem)
 
 import Data.Base16.Types
 import qualified Data.ByteString as B
-import Data.ByteString.Lazy (elem, foldrChunks, fromChunks, length, toChunks)
+import Data.ByteString.Lazy (elem, fromChunks, fromStrict, toChunks, toStrict)
 import Data.ByteString.Lazy.Internal (ByteString(..))
 import qualified Data.ByteString.Base16.Internal.Head as B16
-import qualified Data.ByteString.Base16 as B16 (isValidBase16)
+import qualified Data.ByteString.Base16 as B16 (decodeBase16Untyped, parseBase16)
 import Data.ByteString.Base16.Internal.Utils (reChunk)
 import Data.Text.Lazy (Text)
 import qualified Data.Text as T
@@ -75,6 +74,9 @@ encodeBase16' bs = assertBase16 $ case bs of
 
 -- | Decode a Base16-encoded lazy 'ByteString' value.
 --
+-- Hexadecimal byte pairs may cross chunk boundaries. Decoding remains lazy
+-- in the input chunks.
+--
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 -- === __Examples__:
@@ -83,11 +85,11 @@ encodeBase16' bs = assertBase16 $ case bs of
 -- "Sun"
 --
 decodeBase16 :: Base16 ByteString -> ByteString
-decodeBase16 bs = case extractBase16 bs of
-    Empty -> Empty
-    Chunk b bs' -> Chunk
-      (B16.decodeBase16Typed_ (assertBase16 b))
-      (decodeBase16 $ assertBase16 bs')
+decodeBase16 = fromChunks
+  . fmap (B16.decodeBase16Typed_ . assertBase16)
+  . reChunk
+  . toChunks
+  . extractBase16
 {-# INLINE decodeBase16 #-}
 
 -- | Decode a Base16-encoded 'Text' value.
@@ -105,6 +107,9 @@ decodeBase16' = decodeBase16 . fmap TL.encodeUtf8
 
 -- | Decode an untyped Base16-encoded lazy 'ByteString' value.
 --
+-- Checks the whole input, joining chunks before decoding so that lengths
+-- and error offsets refer to the complete encoded value.
+--
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
 -- === __Examples__:
@@ -116,8 +121,7 @@ decodeBase16' = decodeBase16 . fmap TL.encodeUtf8
 -- Left "invalid character at offset: 1"
 --
 decodeBase16Untyped :: ByteString -> Either T.Text ByteString
-decodeBase16Untyped Empty = Right Empty
-decodeBase16Untyped (Chunk b bs) = Chunk <$> B16.decodeBase16_ b <*> decodeBase16Untyped bs
+decodeBase16Untyped = fmap fromStrict . B16.decodeBase16Untyped . toStrict
 {-# INLINE decodeBase16Untyped #-}
 
 
@@ -142,34 +146,31 @@ decodeBase16Lenient = fromChunks
   . toChunks
 {-# INLINE decodeBase16Lenient #-}
 
--- | Tell whether an untyped lazy 'ByteString' value is base16 encoded.
+-- | Validate an untyped Base16 value and retain its encoded representation.
+--
+-- Accepts even-length ASCII hexadecimal input, including upper-case and
+-- mixed-case digits. Empty input is valid. The original input is preserved,
+-- and errors match 'decodeBase16Untyped'.
+--
+-- The whole input is validated before returning 'Right', regardless of
+-- chunk boundaries. The returned wrapper preserves those boundaries.
 --
 -- === __Examples__:
 --
--- >>> isBase16 "666f6"
--- False
+-- >>> parseBase16 "666f6"
+-- Left "invalid bytestring size"
 --
--- >>> isBase16 "666f"
--- True
+-- >>> parseBase16 "666F"
+-- Right "666F"
 --
-isBase16 :: ByteString -> Bool
-isBase16 bs = even (length bs) && isValidBase16 bs
-{-# INLINE isBase16 #-}
-
--- | Tell whether an untyped lazy 'ByteString' value is a valid Base16 format.
+-- >>> fmap decodeBase16 (parseBase16 "666F")
+-- Right "fo"
 --
--- This will not tell you whether or not this is a correct Base16 representation,
--- only that it conforms to the correct alphabet. To check whether it is a true
--- Base16 encoded 'ByteString' value, use 'isBase16'.
+-- >>> parseBase16 "6x"
+-- Left "invalid character at offset: 1"
 --
--- === __Examples__:
+-- @since 2.0
 --
--- >>> isValidBase16 "666f+/6"
--- False
---
--- >>> isValidBase16 "666f6"
--- True
---
-isValidBase16 :: ByteString -> Bool
-isValidBase16 = foldrChunks (\chunk rest -> B16.isValidBase16 chunk && rest) True
-{-# INLINE isValidBase16 #-}
+parseBase16 :: ByteString -> Either T.Text (Base16 ByteString)
+parseBase16 bs = assertBase16 bs <$ B16.parseBase16 (toStrict bs)
+{-# INLINE parseBase16 #-}
