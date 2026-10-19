@@ -1,5 +1,36 @@
 # Revision history for base16
 
+## 2.0
+
+This major release removes two public functions. See
+[MIGRATION-2.0.md](MIGRATION-2.0.md) for migration examples.
+
+- Replace `isBase16` and `isValidBase16` with `parseBase16` in all six
+  ByteString and Text modules. Parsing checks even length and the mixed-case
+  hexadecimal alphabet, then preserves the original encoded representation.
+  Boolean checks use `isRight . parseBase16`; odd-length alphabet-only inputs
+  previously accepted by `isValidBase16` are now rejected.
+- Add an optional manual `simd` flag, off by default, with bundled ARM64 NEON
+  and runtime-detected x86-64 AVX2/SSSE3 encoding and strict decoding kernels.
+  Unsupported targets and short inputs retain scalar fallbacks; short byte
+  array encoding/decoding and lenient decoding remain scalar.
+- Preserve scalar decoding errors and input-relative offsets with SIMD.
+- Fix lazy typed decoding when hex pairs cross chunk boundaries. Lazy checked
+  decoding now materializes the complete input for consistent total-length
+  checks and global error offsets. Lazy parsing retains the original chunks.
+- Fix [#32](https://github.com/emilypi/Base16/issues/32): lenient Text decoding
+  no longer throws on malformed UTF-8. Valid UTF-8 is preserved; invalid bytes
+  fall back to their Latin-1 characters. Apply the same policy to lazy Text
+  and ShortText, avoiding invalid UTF-8 inside the short-text result.
+- Keep the opaque `Base16` type and instances together in `Data.Base16.Types`;
+  expose the remaining implementation modules through Cabal.
+- Require GHC 9.6 or later, support GHC 9.6 through 9.14, refresh CI, and retire
+  the old i386 CI job. Test both SIMD settings from the source distribution.
+- Add SIMD boundary/differential tests, native sanitizer and guard-page checks,
+  and benchmark coverage around vector and foreign-call boundaries.
+- Guard encoded output size calculations against integer overflow.
+- Update copyright notices through 2026.
+
 ## 1.0
 
 - Revamp api (see: [MIGRATION-1.0.md](MIGRATION-1.0.md) in the source repo)

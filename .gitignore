@@ -1,3 +1,8 @@
 dist-*
 cabal.project.local*
 
+# ChatGPT task outputs
+/logs/
+/.chatgpt/
+/.codex/
+/chatgpt-outputs/

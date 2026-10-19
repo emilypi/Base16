@@ -10,7 +10,7 @@ let
       }:
       mkDerivation {
         pname = "base16";
-        version = "0.3.0.1";
+        version = "2.0";
         src = ./.;
         libraryHaskellDepends = [
           base bytestring deepseq primitive text text-short

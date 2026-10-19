@@ -1,6 +1,6 @@
 -- |
 -- Module       : Data.Text.Short.Encoding.Base16
--- Copyright    : (c) 2020-2023 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -18,8 +18,7 @@ module Data.Text.Short.Encoding.Base16
 , decodeBase16Untyped
 , decodeBase16With
 , decodeBase16Lenient
-, isBase16
-, isValidBase16
+, parseBase16
 ) where
 
 
@@ -29,6 +28,7 @@ import qualified Data.ByteString.Base16 as B16
 import Data.ByteString.Short
 import qualified Data.ByteString.Short.Base16 as BS16
 import Data.Text (Text)
+import qualified Data.Text.Encoding.Base16 as T16
 import Data.Text.Encoding.Base16.Error
 import Data.Text.Short
 import Data.Text.Short.Unsafe
@@ -39,7 +39,7 @@ import Data.Text.Short.Unsafe
 -- >>> :set -XOverloadedStrings
 --
 
--- | Encode a 'ShortText' value in Base16 with padding.
+-- | Encode a 'ShortText' value in Base16.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -112,9 +112,12 @@ decodeBase16With f t = case BS16.decodeBase16Untyped t of
     Right a -> first ConversionError $ f a
 {-# INLINE decodeBase16With #-}
 
--- | Decode an untyped Base16-encoded 'ShortText' value leniently, using a
--- strategy that never fails, catching unicode exceptions raised in the
--- process of converting to text values.
+-- | Decode an untyped Base16-encoded 'ShortText' value leniently.
+--
+-- Non-hexadecimal characters and a final unpaired hex digit are ignored.
+-- Valid UTF-8 sequences are preserved. Each invalid UTF-8 byte is interpreted
+-- as its Latin-1 character (U+0000 through U+00FF), ensuring the result is
+-- valid 'ShortText' without raising Unicode exceptions.
 --
 -- N.B.: this is not RFC 4648-compliant.
 --
@@ -127,39 +130,34 @@ decodeBase16With f t = case BS16.decodeBase16Untyped t of
 -- "f"
 --
 decodeBase16Lenient :: ShortText -> ShortText
-decodeBase16Lenient = fromShortByteStringUnsafe
-  . BS16.decodeBase16Lenient
-  . toShortByteString
+decodeBase16Lenient = fromText . T16.decodeBase16Lenient . toText
 {-# INLINE decodeBase16Lenient #-}
 
--- | Tell whether a 'ShortText' value is Base16-encoded.
+-- | Validate an untyped Base16 value and retain its encoded representation.
+--
+-- Accepts even-length ASCII hexadecimal input, including upper-case and
+-- mixed-case digits. Empty input is valid. The original input is preserved,
+-- and errors match 'decodeBase16Untyped'.
+--
+-- This validates the Base16 encoding, not the UTF-8 validity of its decoded
+-- payload. Use 'decodeBase16With' with a checked conversion for text decoding.
 --
 -- === __Examples__:
 --
--- >>> isBase16 "666f6"
--- False
+-- >>> parseBase16 "666f6"
+-- Left "invalid bytestring size"
 --
--- >>> isBase16 "666f"
--- True
+-- >>> parseBase16 "666F"
+-- Right "666F"
 --
-isBase16 :: ShortText -> Bool
-isBase16 = B16.isBase16 . toByteString
-{-# INLINE isBase16 #-}
-
--- | Tell whether a 'ShortText' value is a valid Base16 format.
+-- >>> fmap decodeBase16 (parseBase16 "666F")
+-- Right "fo"
 --
--- This will not tell you whether or not this is a correct Base16 representation,
--- only that it conforms to the correct shape. To check whether it is a true
--- Base16 encoded 'ShortText' value, use 'isBase16'.
+-- >>> parseBase16 "6x"
+-- Left "invalid character at offset: 1"
 --
--- === __Examples__:
+-- @since 2.0
 --
--- >>> isValidBase16 "666f+/6"
--- False
---
--- >>> isValidBase16 "666f6"
--- True
---
-isValidBase16 :: ShortText -> Bool
-isValidBase16 = B16.isValidBase16 . toByteString
-{-# INLINE isValidBase16 #-}
+parseBase16 :: ShortText -> Either Text (Base16 ShortText)
+parseBase16 bs = assertBase16 bs <$ B16.parseBase16 (toByteString bs)
+{-# INLINE parseBase16 #-}

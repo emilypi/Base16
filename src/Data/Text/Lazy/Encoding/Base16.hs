@@ -1,6 +1,6 @@
 -- |
--- Module       : Data.Text.Encoding.Base16.Lazy
--- Copyright    : (c) 2020-2023 Emily Pillmore
+-- Module       : Data.Text.Lazy.Encoding.Base16
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -18,8 +18,7 @@ module Data.Text.Lazy.Encoding.Base16
 , decodeBase16Untyped
 , decodeBase16With
 , decodeBase16Lenient
-, isBase16
-, isValidBase16
+, parseBase16
 ) where
 
 
@@ -27,6 +26,7 @@ import Data.Base16.Types
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Base16 as B16L
+import Data.Char (chr)
 import qualified Data.Text as T
 import Data.Text.Encoding.Base16.Error (Base16Error(..))
 import Data.Text.Lazy (Text)
@@ -38,7 +38,7 @@ import qualified Data.Text.Lazy.Encoding as TL
 -- >>> :set -XOverloadedStrings
 --
 
--- | Encode a lazy 'Text' value in Base16 with padding.
+-- | Encode a lazy 'Text' value in Base16.
 --
 -- See: <https://tools.ietf.org/html/rfc4648#section-8 RFC-4648 section 8>
 --
@@ -104,14 +104,15 @@ decodeBase16With f t = case B16L.decodeBase16Untyped t of
     Right a -> first ConversionError $ f a
 {-# INLINE decodeBase16With #-}
 
--- | Decode a Base16-encoded lazy 'Text' value leniently, using a
--- strategy that never fails.
+-- | Decode a Base16-encoded lazy 'Text' value leniently.
 --
--- /Warning/: in the conversion to unicode text, exceptions may be thrown.
--- Please use 'decodeBase16'' if you are unsure if you are working with
--- base16-encoded values, or if you expect garbage.
+-- Non-hexadecimal characters and a final unpaired hex digit are ignored.
+-- Valid UTF-8 sequences are preserved, including across chunk boundaries.
+-- Each invalid UTF-8 byte is interpreted as its Latin-1 character (U+0000
+-- through U+00FF), so malformed input does not raise Unicode exceptions.
+-- Decoding remains lazy in the input chunks.
 --
--- N.B.: this is not RFC 4648-compliant. It may give you garbage if you're not careful!
+-- N.B.: this is not RFC 4648-compliant.
 --
 -- === __Examples__:
 --
@@ -122,38 +123,39 @@ decodeBase16With f t = case B16L.decodeBase16Untyped t of
 -- "f"
 --
 decodeBase16Lenient :: Text -> Text
-decodeBase16Lenient = TL.decodeUtf8 . B16L.decodeBase16Lenient . TL.encodeUtf8
+decodeBase16Lenient = TL.decodeUtf8With (\_ -> fmap (chr . fromIntegral))
+  . B16L.decodeBase16Lenient
+  . TL.encodeUtf8
 {-# INLINE decodeBase16Lenient #-}
 
--- | Tell whether a lazy 'Text' value is Base16-encoded.
+-- | Validate an untyped Base16 value and retain its encoded representation.
+--
+-- Accepts even-length ASCII hexadecimal input, including upper-case and
+-- mixed-case digits. Empty input is valid. The original input is preserved,
+-- and errors match 'decodeBase16Untyped'.
+--
+-- The whole input is validated before returning 'Right', regardless of
+-- chunk boundaries. The returned wrapper preserves those boundaries.
+--
+-- This validates the Base16 encoding, not the UTF-8 validity of its decoded
+-- payload. Use 'decodeBase16With' with a checked conversion for text decoding.
 --
 -- === __Examples__:
 --
--- >>> isBase16 "666f6"
--- False
+-- >>> parseBase16 "666f6"
+-- Left "invalid bytestring size"
 --
--- >>> isBase16 "666f"
--- True
+-- >>> parseBase16 "666F"
+-- Right "666F"
 --
-isBase16 :: Text -> Bool
-isBase16 = B16L.isBase16 . TL.encodeUtf8
-
-{-# INLINE isBase16 #-}
-
--- | Tell whether a lazy 'Text' value is a valid Base16 format.
+-- >>> fmap decodeBase16 (parseBase16 "666F")
+-- Right "fo"
 --
--- This will not tell you whether or not this is a correct Base16 representation,
--- only that it conforms to the correct shape. To check whether it is a true
--- Base16 encoded 'Text' value, use 'isBase16'.
+-- >>> parseBase16 "6x"
+-- Left "invalid character at offset: 1"
 --
--- === __Examples__:
+-- @since 2.0
 --
--- >>> isValidBase16 "666f+/6"
--- False
---
--- >>> isValidBase16 "666f6"
--- True
---
-isValidBase16 :: Text -> Bool
-isValidBase16 = B16L.isValidBase16 . TL.encodeUtf8
-{-# INLINE isValidBase16 #-}
+parseBase16 :: Text -> Either T.Text (Base16 Text)
+parseBase16 bs = assertBase16 bs <$ B16L.parseBase16 (TL.encodeUtf8 bs)
+{-# INLINE parseBase16 #-}

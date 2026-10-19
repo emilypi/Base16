@@ -1,8 +1,6 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE MagicHash #-}
 -- |
 -- Module       : Data.ByteString.Base16
--- Copyright    : (c) 2020-2023 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -21,25 +19,15 @@ module Data.ByteString.Base16
 , decodeBase16'
 , decodeBase16Untyped
 , decodeBase16Lenient
-, isBase16
-, isValidBase16
 , parseBase16
 ) where
 
 
-import Prelude hiding (length)
-
 import Data.Base16.Types
-import Data.ByteString (length)
-import Data.ByteString.Internal (ByteString(BS), accursedUnutterablePerformIO)
+import Data.ByteString (ByteString)
 import Data.ByteString.Base16.Internal.Head
-import Data.ByteString.Base16.Internal.Utils (aix)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as T
-
-import Foreign.ForeignPtr
-import Foreign.Ptr
-import Foreign.Storable
 
 -- $setup
 --
@@ -132,60 +120,28 @@ decodeBase16Lenient :: ByteString -> ByteString
 decodeBase16Lenient = decodeBase16Lenient_
 {-# INLINE decodeBase16Lenient #-}
 
--- | Tell whether an untyped 'ByteString' value is base16 encoded.
+-- | Validate an untyped Base16 value and retain its encoded representation.
 --
--- === __Examples__:
---
--- >>> isBase16 "666f6"
--- False
---
--- >>> isBase16 "666f"
--- True
---
-isBase16 :: ByteString -> Bool
-isBase16 bs = even (length bs) && isValidBase16 bs
-{-# INLINE isBase16 #-}
-
--- | Try to parse something that's assumed to be base16 encoded into the proper type
+-- Accepts even-length ASCII hexadecimal input, including upper-case and
+-- mixed-case digits. Empty input is valid. The original input is preserved,
+-- and errors match 'decodeBase16Untyped'.
 --
 -- === __Examples__:
 --
 -- >>> parseBase16 "666f6"
 -- Left "invalid bytestring size"
 --
--- >>> parseBase16 "666f"
--- Right "666f"
+-- >>> parseBase16 "666F"
+-- Right "666F"
+--
+-- >>> fmap decodeBase16 (parseBase16 "666F")
+-- Right "fo"
+--
+-- >>> parseBase16 "6x"
+-- Left "invalid character at offset: 1"
+--
+-- @since 1.0
 --
 parseBase16 :: ByteString -> Either Text (Base16 ByteString)
 parseBase16 bs = assertBase16 bs <$ decodeBase16Untyped bs
-
--- | Tell whether an untyped 'ByteString' value is a valid Base16 format.
---
--- This will not tell you whether or not this is a correct Base16 representation,
--- only that it conforms to the correct alphabet. To check whether it is a true
--- Base16 encoded 'ByteString' value, use 'isBase16'.
---
--- === __Examples__:
---
--- >>> isValidBase16 "666f+/6"
--- False
---
--- >>> isValidBase16 "666f6"
--- True
---
-isValidBase16 :: ByteString -> Bool
-isValidBase16 (BS ptr len) =
-    accursedUnutterablePerformIO $ do
-        withForeignPtr ptr $ \bptr ->
-            go bptr (plusPtr bptr len)
-  where
-    !valid = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\xff\xff\xff\xff\xff\xff\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"#
-    go !bptr !end
-        | bptr == end = pure True
-        | otherwise = do
-            !a <- peek bptr
-            let !b = aix a valid
-            if b == 0xff
-                then pure False
-                else go (plusPtr bptr 1) end
-{-# INLINE isValidBase16 #-}
+{-# INLINE parseBase16 #-}

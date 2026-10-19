@@ -6,7 +6,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Module       : Main
--- Copyright    : (c) 2020-2023 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -87,10 +87,9 @@ class
   decodeTyped :: Base16 bs -> bs
   decode :: bs -> Either Text bs
   lenient :: bs -> bs
+  parse :: bs -> Either Text (Base16 bs)
 
   lower :: bs -> bs
-  correct :: bs -> Bool
-  validate :: bs -> Bool
 
 
 instance Harness 'B16 BS.ByteString where
@@ -100,8 +99,7 @@ instance Harness 'B16 BS.ByteString where
   decodeTyped = B16.decodeBase16
   decode = B16.decodeBase16Untyped
   lenient = B16.decodeBase16Lenient
-  correct = B16.isBase16
-  validate = B16.isValidBase16
+  parse = B16.parseBase16
   lower = BS8.map toLower
 
 instance Harness 'LB16 LBS.ByteString where
@@ -111,8 +109,7 @@ instance Harness 'LB16 LBS.ByteString where
   decodeTyped = LB16.decodeBase16
   decode = LB16.decodeBase16Untyped
   lenient = LB16.decodeBase16Lenient
-  correct = LB16.isBase16
-  validate = LB16.isValidBase16
+  parse = LB16.parseBase16
   lower = LBS8.map toLower
 
 instance Harness 'SB16 SBS.ShortByteString where
@@ -122,8 +119,7 @@ instance Harness 'SB16 SBS.ShortByteString where
   decodeTyped = SB16.decodeBase16
   decode = SB16.decodeBase16Untyped
   lenient = SB16.decodeBase16Lenient
-  correct = SB16.isBase16
-  validate = SB16.isValidBase16
+  parse = SB16.parseBase16
   lower = SBS.toShort . BS8.map toLower . SBS.fromShort
 
 instance Harness 'T16 Text where
@@ -133,8 +129,7 @@ instance Harness 'T16 Text where
   decodeTyped = T16.decodeBase16
   decode = T16.decodeBase16Untyped
   lenient = T16.decodeBase16Lenient
-  correct = T16.isBase16
-  validate = T16.isValidBase16
+  parse = T16.parseBase16
   lower = T.map toLower
 
 instance Harness 'TL16 TL.Text where
@@ -144,8 +139,7 @@ instance Harness 'TL16 TL.Text where
   decodeTyped = TL16.decodeBase16
   decode = TL16.decodeBase16Untyped
   lenient = TL16.decodeBase16Lenient
-  correct = TL16.isBase16
-  validate = TL16.isValidBase16
+  parse = TL16.parseBase16
   lower = TL.map toLower
 
 instance Harness 'TS16 TS.ShortText where
@@ -155,8 +149,7 @@ instance Harness 'TS16 TS.ShortText where
   decodeTyped = TS16.decodeBase16
   decode = TS16.decodeBase16Untyped
   lenient = TS16.decodeBase16Lenient
-  correct = TS16.isBase16
-  validate = TS16.isValidBase16
+  parse = TS16.parseBase16
   lower = TS.fromText . T.map toLower . TS.toText
 
 class Harness a cs

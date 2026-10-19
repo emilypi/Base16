@@ -1,6 +1,6 @@
 -- |
 -- Module       : Data.ByteString.Short.Base16
--- Copyright    : (c) 2020-2023 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-style
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -19,8 +19,7 @@ module Data.ByteString.Short.Base16
 , decodeBase16'
 , decodeBase16Untyped
 , decodeBase16Lenient
-, isBase16
-, isValidBase16
+, parseBase16
 ) where
 
 
@@ -126,34 +125,28 @@ decodeBase16Lenient :: ShortByteString -> ShortByteString
 decodeBase16Lenient = decodeBase16ShortLenient_
 {-# INLINE decodeBase16Lenient #-}
 
--- | Tell whether an untyped 'ShortByteString' value is base16 encoded.
+-- | Validate an untyped Base16 value and retain its encoded representation.
+--
+-- Accepts even-length ASCII hexadecimal input, including upper-case and
+-- mixed-case digits. Empty input is valid. The original input is preserved,
+-- and errors match 'decodeBase16Untyped'.
 --
 -- === __Examples__:
 --
--- >>> isBase16 "666f6"
--- False
+-- >>> parseBase16 "666f6"
+-- Left "invalid bytestring size"
 --
--- >>> isBase16 "666f"
--- True
+-- >>> parseBase16 "666F"
+-- Right "666F"
 --
-isBase16 :: ShortByteString -> Bool
-isBase16 = B16.isBase16 . fromShort
-{-# INLINE isBase16 #-}
-
--- | Tell whether an untyped 'ShortByteString' value is a valid Base16 format.
+-- >>> fmap decodeBase16 (parseBase16 "666F")
+-- Right "fo"
 --
--- This will not tell you whether or not this is a correct Base16 representation,
--- only that it conforms to the correct alphabet. To check whether it is a true
--- Base16 encoded 'ShortByteString' value, use 'isBase16'.
+-- >>> parseBase16 "6x"
+-- Left "invalid character at offset: 1"
 --
--- === __Examples__:
+-- @since 2.0
 --
--- >>> isValidBase16 "666f+/6"
--- False
---
--- >>> isValidBase16 "666f6"
--- True
---
-isValidBase16 :: ShortByteString -> Bool
-isValidBase16 = B16.isValidBase16 . fromShort
-{-# INLINE isValidBase16 #-}
+parseBase16 :: ShortByteString -> Either Text (Base16 ShortByteString)
+parseBase16 bs = assertBase16 bs <$ B16.parseBase16 (fromShort bs)
+{-# INLINE parseBase16 #-}

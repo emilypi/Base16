@@ -1,125 +1,47 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE PackageImports #-}
-module Main
-( main
-)where
+-- Copyright (c) 2020-2026 Emily Pillmore. BSD-3-Clause; see LICENSE.
+module Main (main) where
 
-
-import Criterion
 import Criterion.Main
-
-import Data.Base16.Types
-import Data.ByteString
-import Data.ByteString.Short
-import "base16" Data.ByteString.Base16 as B16
-import "base16" Data.ByteString.Short.Base16 as BS16
-import "base16-bytestring" Data.ByteString.Base16 as Bos
+import Data.Base16.Types (assertBase16, extractBase16)
+import qualified Data.ByteString.Short as SBS
+import qualified "base16" Data.ByteString.Base16 as B16
+import qualified "base16" Data.ByteString.Short.Base16 as S16
+import qualified "base16-bytestring" Data.ByteString.Base16 as Reference
 import Data.ByteString.Random (random)
 
-
 main :: IO ()
-main =
-  defaultMain
-    [ env bs $ \ ~((bs25,bs100,bs1k,bs10k,bs100k,bs1mm),(bs25L,bs100L,bs1kL,bs10kL,bs100kL,bs1mmL)) ->
-      bgroup "encode"
-      [ bgroup "25"
-        [ bench "base16-short" $ whnf BS16.encodeBase16' bs25L
-        , bench "base16-bytestring" $ whnf Bos.encode bs25
-        , bench "base16" $ whnf B16.encodeBase16' bs25
-        ]
-      , bgroup "100"
-        [ bench "base16-short" $ whnf BS16.encodeBase16' bs100L
-        , bench "base16-bytestring" $ whnf Bos.encode bs100
-        , bench "base16" $ whnf B16.encodeBase16' bs100
-        ]
-      , bgroup "1k"
-        [ bench "base16-short" $ whnf BS16.encodeBase16' bs1kL
-        , bench "base16-bytestring" $ whnf Bos.encode bs1k
-        , bench "base16" $ whnf B16.encodeBase16' bs1k
-        ]
-      , bgroup "10k"
-        [ bench "base16-short" $ whnf BS16.encodeBase16' bs10kL
-        , bench "base16-bytestring" $ whnf Bos.encode bs10k
-        , bench "base16" $ whnf B16.encodeBase16' bs10k
-        ]
-      , bgroup "100k"
-        [ bench "base16-short" $ whnf BS16.encodeBase16' bs100kL
-        , bench "base16-bytestring" $ whnf Bos.encode bs100k
-        , bench "base16" $ whnf B16.encodeBase16' bs100k
-        ]
-      , bgroup "1mm"
-        [ bench "base16-short" $ whnf BS16.encodeBase16' bs1mmL
-        , bench "base16-bytestring" $ whnf Bos.encode bs1mm
-        , bench "base16" $ whnf B16.encodeBase16' bs1mm
-        ]
+main = defaultMain [benchSize n | n <- sizes]
+  where
+    sizes = [0, 1, 15, 16, 31, 32, 63, 64, 65, 127, 128, 129,
+             1000, 10000, 100000, 1000000]
+
+benchSize :: Int -> Benchmark
+benchSize size = env inputs $ \ ~(raw, encoded, shortRaw, shortEncoded) ->
+  bgroup (show size)
+    [ bgroup "encode"
+      [ bench variant $ nf (extractBase16 . B16.encodeBase16') raw
+      , bench "base16-short" $ nf (extractBase16 . S16.encodeBase16') shortRaw
+      , bench "base16-bytestring" $ nf Reference.encode raw
       ]
-    , env bs' $ \ ~((bs25,bs100,bs1k,bs10k,bs100k,bs1mm),(bs25L,bs100L,bs1kL,bs10kL,bs100kL,bs1mmL)) ->
-      bgroup "decode"
-      [ bgroup "25"
-        [ bench "base16-short" $ whnf BS16.decodeBase16 bs25L
-        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs25
-        , bench "base16" $ whnf B16.decodeBase16 bs25
-        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs25
-        , bench "isBase16" $ whnf B16.isBase16 $ extractBase16 bs25
-        , bench "isValidBase16" $ whnf B16.isValidBase16 $ extractBase16 bs25
-        ]
-      , bgroup "100"
-        [ bench "base16-short" $ whnf BS16.decodeBase16 bs100L
-        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs100
-        , bench "base16" $ whnf B16.decodeBase16 bs100
-        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs100
-        , bench "isBase16" $ whnf B16.isBase16 $ extractBase16 bs100
-        , bench "isValidBase16" $ whnf B16.isValidBase16 $ extractBase16 bs100
-        ]
-      , bgroup "1k"
-        [ bench "base16-short" $ whnf BS16.decodeBase16 bs1kL
-        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs1k
-        , bench "base16" $ whnf B16.decodeBase16 bs1k
-        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs1k
-        , bench "isBase16" $ whnf B16.isBase16 $ extractBase16 bs1k
-        , bench "isValidBase16" $ whnf B16.isValidBase16 $ extractBase16 bs1k
-        ]
-      , bgroup "10k"
-        [ bench "base16-short" $ whnf BS16.decodeBase16 bs10kL
-        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs10k
-        , bench "base16" $ whnf B16.decodeBase16 bs10k
-        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs10k
-        , bench "isBase16" $ whnf B16.isBase16 $ extractBase16 bs10k
-        , bench "isValidBase16" $ whnf B16.isValidBase16 $ extractBase16 bs10k
-        ]
-      , bgroup "100k"
-        [ bench "base16-short" $ whnf BS16.decodeBase16 bs100kL
-        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs100k
-        , bench "base16" $ whnf B16.decodeBase16 bs100k
-        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs100k
-        , bench "isBase16" $ whnf B16.isBase16 $ extractBase16 bs100k
-        , bench "isValidBase16" $ whnf B16.isValidBase16 $ extractBase16 bs100k
-        ]
-      , bgroup "1mm"
-        [ bench "base16-short" $ whnf BS16.decodeBase16 bs1mmL
-        , bench "base16-bytestring" $ whnf Bos.decode $ extractBase16 bs1mm
-        , bench "base16" $ whnf B16.decodeBase16 bs1mm
-        , bench "base16-untyped" $ whnf B16.decodeBase16Untyped $ extractBase16 bs1mm
-        , bench "isBase16" $ whnf B16.isBase16 $ extractBase16 bs1mm
-        , bench "isValidBase16" $ whnf B16.isValidBase16 $ extractBase16 bs1mm
-        ]
+    , bgroup "decode"
+      [ bench (variant ++ "-typed") $ nf B16.decodeBase16 (assertBase16 encoded)
+      , bench (variant ++ "-checked") $ nf B16.decodeBase16Untyped encoded
+      , bench "base16-short" $ nf S16.decodeBase16 (assertBase16 shortEncoded)
+      , bench "base16-bytestring" $ nf Reference.decode encoded
       ]
+    , bench ("parse/" ++ variant) $ nf B16.parseBase16 encoded
     ]
   where
-    bs = do
-      a <- random 25
-      b <- random 100
-      c <- random 1000
-      d <- random 10000
-      e <- random 100000
-      f <- random 1000000
-      return ((a,b,c,d,e,f),(toShort a,toShort b,toShort c,toShort d,toShort e,toShort f))
+    inputs = do
+      raw <- random (fromIntegral size)
+      let encoded = Reference.encode raw
+      pure (raw, encoded, SBS.toShort raw, SBS.toShort encoded)
 
-    bs' = do
-      let k = fmap toShort
-      a <- B16.encodeBase16' <$> random 25
-      b <- B16.encodeBase16' <$> random 100
-      c <- B16.encodeBase16' <$> random 1000
-      d <- B16.encodeBase16' <$> random 10000
-      e <- B16.encodeBase16' <$> random 100000
-      f <- B16.encodeBase16' <$> random 1000000
-      return ((a,b,c,d,e,f),(k a,k b,k c,k d,k e,k f))
+variant :: String
+#ifdef BASE16_SIMD
+variant = "base16-simd"
+#else
+variant = "base16-scalar"
+#endif
